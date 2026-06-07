@@ -1,50 +1,43 @@
-import { useEffect, useState, type CSSProperties } from "react";
-import { getHealth, listSpecs, type ProductSpec } from "./api";
+import { useEffect, useState } from "react";
+import { AppShell, type ViewId, type BatchContext } from "./AppShell";
+import { Dashboard } from "./views/Dashboard";
+import { CertRegister } from "./views/CertRegister";
+import { IngestionView } from "./views/IngestionView";
+import { BatchRecord } from "./views/BatchRecord";
+import { DocumentGenerator } from "./views/DocumentGenerator";
+import { OOSView } from "./views/OOSView";
+import { Laboratories } from "./views/Laboratories";
+import { Templates } from "./views/Templates";
+import { Placeholder } from "./views/Placeholder";
+import { getHealth } from "./api";
+import "./styles/global.css";
+
+const ACTIVE_BATCH: BatchContext = { packaging_batch_no: "—", processing_batch_no: "—", status: "no batch selected" };
 
 export function App() {
-  const [health, setHealth] = useState<string>("checking…");
-  const [specs, setSpecs] = useState<ProductSpec[]>([]);
-  const [err, setErr] = useState<string | null>(null);
+  const [view, setView] = useState<ViewId>("dashboard");
+  const [health, setHealth] = useState<"ok" | "down" | "checking">("checking");
 
-  useEffect(() => {
-    getHealth()
-      .then((h) => setHealth(`${h.service} v${h.version} — ${h.status}`))
-      .catch((e) => setErr(String(e)));
-    listSpecs()
-      .then(setSpecs)
-      .catch(() => {/* sidecar/DB may not be up yet in scaffold */});
-  }, []);
+  useEffect(() => { getHealth().then(() => setHealth("ok")).catch(() => setHealth("down")); }, []);
 
   return (
-    <main style={{ fontFamily: "system-ui", padding: 24, maxWidth: 880, margin: "0 auto" }}>
-      <h1 style={{ color: "#1B3A5C" }}>COQ_GEN <span style={{ color: "#A67C2E" }}>— Phase 0</span></h1>
-      <p>Core API: <strong>{err ? `unreachable (${err})` : health}</strong></p>
-
-      <h2 style={{ color: "#1B3A5C" }}>Product specifications</h2>
-      {specs.length === 0 ? (
-        <p style={{ color: "#475569" }}>No specs loaded (start the sidecar + apply the schema/seed).</p>
-      ) : (
-        <table style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>{["Code", "Ver", "Cat", "Dominance", "Title"].map((h) => (
-              <th key={h} style={{ textAlign: "left", borderBottom: "2px solid #1B3A5C", padding: 6 }}>{h}</th>
-            ))}</tr>
-          </thead>
-          <tbody>
-            {specs.map((s) => (
-              <tr key={`${s.spec_code}-${s.version}`}>
-                <td style={td}>{s.spec_code}</td>
-                <td style={td}>{s.version}</td>
-                <td style={td}>{s.category}</td>
-                <td style={td}>{s.dominance ?? "—"}</td>
-                <td style={td}>{s.title}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <AppShell current={view} onNavigate={setView} batchContext={ACTIVE_BATCH}>
+      {health === "down" && (
+        <div style={{ marginBottom: 16, padding: "8px 14px", borderRadius: "var(--radius-md)", background: "var(--status-pending-bg)", border: "1px solid var(--status-pending-border)", color: "var(--status-pending)", fontSize: 12 }}>
+          Core API sidecar unreachable — views show empty/loading states. Start it with <code style={{ fontFamily: "var(--font-mono)" }}>make api</code>.
+        </div>
       )}
-    </main>
+
+      {view === "dashboard" && <Dashboard onNavigate={setView} />}
+      {view === "ingestion" && <IngestionView />}
+      {view === "batches" && <BatchRecord onNavigate={setView} />}
+      {view === "gen" && <DocumentGenerator initial="coq" />}
+      {view === "register" && <CertRegister />}
+      {view === "oos" && <OOSView />}
+      {view === "labs" && <Laboratories />}
+      {view === "templates" && <Templates />}
+      {view === "parameters" && <Placeholder title="Parameter Database" note="Specification master per product/grade with default_source (internal/external/not_performed). Wires to GET /specs and GET /parameters (both live)." />}
+      {view === "settings" && <Placeholder title="Settings" note="Sidecar token, Letta gateway, user roles. (Templates moved to their own view.)" />}
+    </AppShell>
   );
 }
-
-const td: CSSProperties = { borderBottom: "1px solid #E3EAF3", padding: 6 };

@@ -243,6 +243,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/coq/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Coq Preview */
+        post: operations["coq_preview_coq_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/coq/issue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Coq Issue */
+        post: operations["coq_issue_coq_issue_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/icoa/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Icoa Preview */
+        post: operations["icoa_preview_icoa_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/icoa/issue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Icoa Issue */
+        post: operations["icoa_issue_icoa_issue_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/labs": {
         parameters: {
             query?: never;
@@ -449,6 +517,36 @@ export interface components {
              */
             is_active: boolean;
         };
+        /** GeneratePreviewRequest */
+        GeneratePreviewRequest: {
+            /** Packaging Batch Number */
+            packaging_batch_number?: string | null;
+            /** Production Batch Number */
+            production_batch_number?: string | null;
+            /** Template Id */
+            template_id?: string | null;
+        };
+        /** GuardFinding */
+        GuardFinding: {
+            /** Code */
+            code: string;
+            /** Severity */
+            severity: string;
+            /** Message */
+            message: string;
+            /** Detail */
+            detail?: string | null;
+        };
+        /** GuardReport */
+        GuardReport: {
+            /** Ok */
+            ok: boolean;
+            /**
+             * Findings
+             * @default []
+             */
+            findings: components["schemas"]["GuardFinding"][];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -493,6 +591,31 @@ export interface components {
              * @default []
              */
             filenames: string[];
+        };
+        /** IssueRequest */
+        IssueRequest: {
+            /** Packaging Batch Number */
+            packaging_batch_number?: string | null;
+            /** Production Batch Number */
+            production_batch_number?: string | null;
+            /** Template Id */
+            template_id?: string | null;
+            /** Override Reason */
+            override_reason?: string | null;
+        };
+        /** IssueResult */
+        IssueResult: {
+            /** Doc Type */
+            doc_type: string;
+            /** Certificate Number */
+            certificate_number: string;
+            /** Sha256 */
+            sha256: string;
+            guard: components["schemas"]["GuardReport"];
+            /** Register Entry Id */
+            register_entry_id: string;
+            /** Html */
+            html: string;
         };
         /** LabInstitution */
         LabInstitution: {
@@ -594,6 +717,16 @@ export interface components {
             default_method_family?: string | null;
             /** Default Source */
             default_source?: string | null;
+        };
+        /** PreviewResult */
+        PreviewResult: {
+            /** Doc Type */
+            doc_type: string;
+            /** Html */
+            html: string;
+            guard: components["schemas"]["GuardReport"];
+            /** Proposed Number */
+            proposed_number?: string | null;
         };
         /** ProductSpec */
         ProductSpec: {
@@ -1183,6 +1316,146 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DocumentTemplate"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    coq_preview_coq_preview_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-coqgen-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GeneratePreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreviewResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    coq_issue_coq_issue_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-coqgen-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    icoa_preview_icoa_preview_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-coqgen-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GeneratePreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreviewResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    icoa_issue_icoa_issue_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-coqgen-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueResult"];
                 };
             };
             /** @description Validation Error */

@@ -29,9 +29,21 @@ export type TemplateUpload = S["TemplateUpload"];
 export type LabInstitution = S["LabInstitution"];
 export type ParameterDictionaryEntry = S["ParameterDictionaryEntry"];
 
-// Common string-union helpers (kept in sync with the Pydantic docstrings)
+// Canonical string vocabularies — the single source of truth for views/status.ts
+// (answers the design lane's open ask #2). Kept in sync with the backend enums.
 export type Verdict = "pass" | "fail" | "pending" | "not_tested";
 export type CertType = "iCoA" | "eCoA" | "CoQ";
-export type RegisterStatus = "pending_review" | "accepted" | "rejected" | "voided";
 export type DocType = "icoa" | "coq" | "coa" | "spec";
 export type ParameterSource = "internal" | "external" | "not_performed";
+// production_batch.status
+export type BatchStatus = "in_progress" | "testing" | "released" | "rejected";
+// OOSItem.status
+export type OOSStatus = "open" | "under_investigation" | "closed";
+// coq.status (issuance lifecycle)
+export type CoqStatus = "draft" | "numbered" | "rendered" | "signed" | "issued" | "voided";
+// register_entry.status / ecoa_document.register_status
+export type RegisterStatus =
+  | "pending_review" | "accepted" | "rejected"   // source certs (iCoA/eCoA)
+  | "active" | "superseded" | "voided";          // CoQ entries
+// document_template.status
+export type TemplateStatus = "active" | "superseded" | "draft";

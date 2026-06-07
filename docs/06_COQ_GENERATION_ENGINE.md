@@ -184,6 +184,26 @@ signatures exist. Optional PKCS#7 PDF signing embeds a cryptographic signature i
 > band; post‑render scan confirms no `EU GMP` string and the `MK GMP Certified Facility` footer;
 > Blagoj + Jovana sign; PDF locked + hashed; data pack exported for the EU QP.
 
+## 6.12 Engine API (implemented)
+
+The HTML issue path is implemented and tested (`services/core_api/coqgen_core/engine/` +
+`routers/generator.py`):
+
+- `POST /coq/preview`, `POST /icoa/preview` → bind batch data to the active `document_template`
+  (Jinja2 **sandboxed**, or a built‑in fallback), run the **compliance guard**, and return
+  `{ doc_type, html, guard, proposed_number }`. **No writes.** (preview returns rendered HTML.)
+- `POST /coq/issue`, `POST /icoa/issue` → guard must pass; block findings require an
+  `override_reason` (else **HTTP 409** with the guard report). On pass: **transactional** number
+  allocation (`cert_sequence` `FOR UPDATE` → `CoQ-PP-YYYY-NNNN` / `iCoA-PP-YYYY-NNNN`), render,
+  SHA‑256, persist the artifact (`source_file`) + the record (`coq` for CoQ; an internal
+  `ecoa_document` for iCoA) + the **register entry**, atomically. Returns
+  `{ certificate_number, sha256, guard, register_entry_id, html }`.
+
+The guard (`engine/guard.py`) is deterministic and config‑driven from `controlled_vocabulary`:
+completeness, spec gaps, source‑mapping, **open‑OOS block**, forbidden `EU GMP` on flower docs,
+MK‑GMP wording, and the two‑signatory/no‑QP rule. iCoA binds only `default_source='internal'`
+parameters. **Still to come:** PDF/A export (WeasyPrint) and dual e‑signature (§6.8–6.9).
+
 Validation, security and the data‑integrity controls that make all of this defensible are in
 [08 — Security & Data Integrity](08_SECURITY_DATA_INTEGRITY.md); the build order is in
 [07 — Roadmap](07_ROADMAP.md).

@@ -6,7 +6,9 @@ from fastapi import FastAPI
 
 from . import __version__
 from .config import get_settings
-from .routers import batches, catalog, dashboard, health, ingest, register, specs, templates
+from .routers import (
+    batches, catalog, dashboard, generator, health, ingest, register, specs, templates,
+)
 
 app = FastAPI(
     title="COQ_GEN Core API",
@@ -20,6 +22,7 @@ app.include_router(dashboard.router)
 app.include_router(batches.router)
 app.include_router(register.router)
 app.include_router(templates.router)
+app.include_router(generator.router)
 app.include_router(catalog.router)
 
 

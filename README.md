@@ -42,6 +42,7 @@ number, writes the Certificate Issuance Register entry, and exports a locked PDF
 | 08 | [docs/08_SECURITY_DATA_INTEGRITY.md](docs/08_SECURITY_DATA_INTEGRITY.md) | GMP Annex 11 / GxP, ALCOA+ data integrity, audit trail, e‑signatures |
 | 09 | [docs/09_SOP_ALIGNMENT.md](docs/09_SOP_ALIGNMENT.md) | Traceability to **QCSOP 010** & **QCSOP 012 v3** — confirmations + corrections |
 | 10 | [docs/10_PHYTOCERT_COMPARISON.md](docs/10_PHYTOCERT_COMPARISON.md) | In-depth comparison vs the **PhytoCert** design/UX prototype + adoption decision |
+| 11 | [docs/11_DESIGN_AGENT_HANDSHAKE.md](docs/11_DESIGN_AGENT_HANDSHAKE.md) | **Design ⇄ Engineering agent handshake** (interface control doc) — collaboration contract |
 
 Foundational, ready‑to‑build artifacts live alongside the docs:
 

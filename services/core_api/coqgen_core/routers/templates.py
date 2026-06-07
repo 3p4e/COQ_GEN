@@ -23,7 +23,7 @@ from ..deps import require_session
 
 router = APIRouter(prefix="/templates", tags=["templates"], dependencies=[Depends(require_session)])
 
-_DOC_TYPES = {"icoa", "coq", "coa", "spec"}
+_DOC_TYPES = {"icoa", "coq", "spec"}   # CoA == iCoA (internal); no separate 'coa' type
 _COLS = "doc_type, name, version, doc_class, render_engine, status, is_active"
 
 

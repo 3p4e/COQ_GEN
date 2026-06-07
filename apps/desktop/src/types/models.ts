@@ -33,7 +33,7 @@ export type ParameterDictionaryEntry = S["ParameterDictionaryEntry"];
 // (answers the design lane's open ask #2). Kept in sync with the backend enums.
 export type Verdict = "pass" | "fail" | "pending" | "not_tested";
 export type CertType = "iCoA" | "eCoA" | "CoQ";
-export type DocType = "icoa" | "coq" | "coa" | "spec";
+export type DocType = "icoa" | "coq" | "spec"; // CoA == iCoA (internal); no separate "coa"
 export type ParameterSource = "internal" | "external" | "not_performed";
 // production_batch.status
 export type BatchStatus = "in_progress" | "testing" | "released" | "rejected";

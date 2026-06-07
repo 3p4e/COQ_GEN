@@ -165,7 +165,7 @@ class OOSItem(BaseModel):
 
 class DocumentTemplate(BaseModel):
     """A versioned template for a document the app GENERATES (iCoA/CoQ/CoA/Spec)."""
-    doc_type: str                       # icoa | coq | coa | spec
+    doc_type: str                       # icoa (== internal CoA) | coq | spec
     name: str
     version: str
     doc_class: str = "flower_coq"
@@ -176,7 +176,7 @@ class DocumentTemplate(BaseModel):
 
 class TemplateUpload(BaseModel):
     """Upload a new template version; supersedes the prior active for its doc_type."""
-    doc_type: str                       # icoa | coq | coa | spec
+    doc_type: str                       # icoa (== internal CoA) | coq | spec
     name: str
     version: str
     html: str

@@ -102,8 +102,9 @@ third). The data model and the matcher are built around this heterogeneity from 
 
 | Term | Meaning |
 |------|---------|
-| **eCOA** | External Certificate of Analysis — a PDF issued by an outsourced testing laboratory. |
-| **COQ** | Certificate of Quality — the manufacturer's release certificate compiled by this system. |
+| **eCoA** | **External** Certificate of Analysis — a PDF issued by an **outsourced** testing laboratory (their format, ingested). |
+| **iCoA (= CoA)** | **Internal** Certificate of Analysis — performed and issued **inside Purely Plant**, carries only PP's own parameter result(s), **never references another lab**. App‑generated; `iCoA-PP-YYYY-NNNN`. "CoA" and "iCoA" are the same document. |
+| **COQ** | Certificate of Quality — compiled by this system; the **only** document that aggregates across sources, citing per parameter the issuing lab + eCoA code + date (or the iCoA). |
 | **Spec** | Product specification (`QCSP-…`) listing required parameters + acceptance criteria. |
 | **Master parameter store** | The reconciled, per‑batch single source of truth used to compile the COQ. |
 | **Lineage** | The chain Cultivation Batch № → Production Batch № → Packaging Batch №. |

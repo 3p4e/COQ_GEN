@@ -98,9 +98,15 @@ Confirmed by the owner; encoded in the schema/seed/endpoints:
   per‑lab synonym learning + human review; original file preserved in its original language; an
   internal cross‑ref `eCoA-PP-YYYY-NNNN` is assigned on receipt; conformance is re‑determined by
   Purely Plant. eCoAs are **read, never formatted by us**.
-- **iCoA = internal, app‑generated.** An Annex produced from the CoA/CoQ SOP, rendered by the app
-  from a **controlled template** (final HTML to be supplied by owner). Numbered
-  `iCoA-PP-YYYY-NNNN` (per QCSOP 012). It is referenced as a source certificate in the batch's CoQ.
+- **iCoA = internal, app‑generated. CoA ≡ iCoA.** A Certificate of Analysis is **performed and
+  issued inside Purely Plant**; it carries **only Purely Plant's own parameter result(s)** (one or
+  more) and **never references another laboratory**. There is no separate "CoA" document type — the
+  CoA *is* the iCoA. Rendered by the app from a **controlled template** (final HTML to be supplied
+  by owner). Numbered `iCoA-PP-YYYY-NNNN` (per QCSOP 012). It is referenced as a source certificate
+  in the batch's CoQ.
+- **Aggregation happens only in the CoQ.** Outsourced (eCoA) results are gathered and referenced in
+  the CoQ **per parameter**, citing the **issuing lab + eCoA document code + date**; PP‑tested
+  parameters cite the **iCoA**. Neither the iCoA nor any eCoA aggregates across labs — only the CoQ does.
 - **Template management (first‑class feature).** *All* documents the app generates (iCoA, CoQ, CoA,
   Spec) use the versioned `document_template` store: upload a new `.html` version → it supersedes
   the prior active template for that `doc_type`; **future** documents render with the active

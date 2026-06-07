@@ -41,6 +41,7 @@ number, writes the Certificate Issuance Register entry, and exports a locked PDF
 | 07 | [docs/07_ROADMAP.md](docs/07_ROADMAP.md) | Phased implementation plan, milestones, staffing, risks |
 | 08 | [docs/08_SECURITY_DATA_INTEGRITY.md](docs/08_SECURITY_DATA_INTEGRITY.md) | GMP Annex 11 / GxP, ALCOA+ data integrity, audit trail, e‑signatures |
 | 09 | [docs/09_SOP_ALIGNMENT.md](docs/09_SOP_ALIGNMENT.md) | Traceability to **QCSOP 010** & **QCSOP 012 v3** — confirmations + corrections |
+| 10 | [docs/10_PHYTOCERT_COMPARISON.md](docs/10_PHYTOCERT_COMPARISON.md) | In-depth comparison vs the **PhytoCert** design/UX prototype + adoption decision |
 
 Foundational, ready‑to‑build artifacts live alongside the docs:
 

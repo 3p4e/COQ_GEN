@@ -31,7 +31,8 @@ async def parameters(session: AsyncSession = Depends(get_session)) -> list[Param
     rows = (
         await session.execute(
             text(
-                "SELECT canonical_key, display_name, category, canonical_unit, default_method_family "
+                "SELECT canonical_key, display_name, category, canonical_unit, "
+                "default_method_family, default_source "
                 "FROM parameter_dictionary ORDER BY category, display_name"
             )
         )

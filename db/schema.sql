@@ -138,6 +138,11 @@ CREATE TABLE parameter_dictionary (
     category        TEXT NOT NULL,            -- microbiology|heavy_metals|pesticides|mycotoxins|cannabinoids|water_activity|residual_solvents|foreign_matter
     canonical_unit  TEXT,                     -- CFU/g, ppm, % w/w, aw
     default_method_family TEXT,               -- e.g. "Ph.Eur 2.6.12 / USP <61>"
+    -- Test ownership: which path produces this parameter for a batch.
+    --   internal      = Purely Plant QC lab issues an iCoA (referenced in the CoQ)
+    --   external      = outsourced/contracted lab issues an eCoA (ingested)
+    --   not_performed = capability not available in-house (e.g. HPTLC Test C)
+    default_source  TEXT,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -335,19 +340,30 @@ CREATE UNIQUE INDEX uq_master_confirmed
 -- 5. COQ templates, certificates, lines, numbering, register, signatures
 -- ---------------------------------------------------------------------------
 
-CREATE TABLE coq_template (
+-- Versioned template store for ALL documents the app GENERATES (iCoA, CoQ, CoA,
+-- Spec). Uploading a new .html version supersedes the prior active template for
+-- that doc_type; future documents render with the active version, while issued
+-- documents keep the exact version they were rendered with (immutability).
+CREATE TABLE document_template (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name            TEXT NOT NULL,            -- CoQ_Template_v02_VariationF
+    doc_type        TEXT NOT NULL,            -- icoa | coq | coa | spec
+    name            TEXT NOT NULL,            -- e.g. CoQ_Template_v02_VariationF
     version         TEXT NOT NULL,
     html            TEXT NOT NULL,            -- uploaded HTML (validated vs token contract)
+    sha256          BYTEA,                    -- content hash of the html
     doc_class       TEXT NOT NULL DEFAULT 'flower_coq',
     render_engine   TEXT NOT NULL DEFAULT 'weasyprint', -- weasyprint|playwright
     token_manifest  JSONB NOT NULL DEFAULT '{}'::jsonb, -- tokens the template declares/uses
+    status          TEXT NOT NULL DEFAULT 'active',      -- active | superseded | draft
     is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+    supersedes_id   UUID REFERENCES document_template(id),
+    effective_from  DATE,
     uploaded_by     UUID REFERENCES app_user(id),
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (name, version)
+    UNIQUE (doc_type, name, version)
 );
+-- at most one active template per doc_type (the version future documents use)
+CREATE UNIQUE INDEX uq_doctemplate_active ON document_template(doc_type) WHERE is_active;
 
 -- Per-(certificate type, year) strictly-monotonic counter (QCSOP 012 v3 §6.9.1):
 -- "next sequential number for EACH certificate type within EACH calendar year ...
@@ -371,7 +387,7 @@ CREATE TABLE coq (
     packaging_batch_id      UUID NOT NULL REFERENCES packaging_batch(id),
     production_batch_id      UUID NOT NULL REFERENCES production_batch(id),
     spec_reference          TEXT NOT NULL,           -- QCSP-IMB-001 v02
-    template_id             UUID NOT NULL REFERENCES coq_template(id),
+    template_id             UUID NOT NULL REFERENCES document_template(id),  -- doc_type='coq'
     disposition             TEXT,                    -- released|rejected|on_hold
     compliance_summary      TEXT,
     status                  TEXT NOT NULL DEFAULT 'draft', -- draft|numbered|rendered|signed|issued|voided

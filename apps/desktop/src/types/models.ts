@@ -24,7 +24,8 @@ export type LineageRef = S["LineageRef"];
 export type MasterParameterLine = S["MasterParameterLine"];
 export type RegisterEntry = S["RegisterEntry"];
 export type OOSItem = S["OOSItem"];
-export type CoqTemplate = S["CoqTemplate"];
+export type DocumentTemplate = S["DocumentTemplate"];
+export type TemplateUpload = S["TemplateUpload"];
 export type LabInstitution = S["LabInstitution"];
 export type ParameterDictionaryEntry = S["ParameterDictionaryEntry"];
 
@@ -32,3 +33,5 @@ export type ParameterDictionaryEntry = S["ParameterDictionaryEntry"];
 export type Verdict = "pass" | "fail" | "pending" | "not_tested";
 export type CertType = "iCoA" | "eCoA" | "CoQ";
 export type RegisterStatus = "pending_review" | "accepted" | "rejected" | "voided";
+export type DocType = "icoa" | "coq" | "coa" | "spec";
+export type ParameterSource = "internal" | "external" | "not_performed";

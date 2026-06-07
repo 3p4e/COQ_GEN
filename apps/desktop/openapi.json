@@ -578,14 +578,24 @@
         }
       }
     },
-    "/coq/templates": {
+    "/templates": {
       "get": {
         "tags": [
-          "coq"
+          "templates"
         ],
-        "summary": "Templates",
-        "operationId": "templates_coq_templates_get",
+        "summary": "List Templates",
+        "operationId": "list_templates_templates_get",
         "parameters": [
+          {
+            "name": "include_superseded",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Superseded"
+            }
+          },
           {
             "name": "x-coqgen-token",
             "in": "header",
@@ -611,9 +621,128 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/CoqTemplate"
+                    "$ref": "#/components/schemas/DocumentTemplate"
                   },
-                  "title": "Response Templates Coq Templates Get"
+                  "title": "Response List Templates Templates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "Upload Template",
+        "operationId": "upload_template_templates_post",
+        "parameters": [
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateUpload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentTemplate"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/templates/{doc_type}": {
+      "get": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "List For Type",
+        "operationId": "list_for_type_templates__doc_type__get",
+        "parameters": [
+          {
+            "name": "doc_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Doc Type"
+            }
+          },
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentTemplate"
+                  },
+                  "title": "Response List For Type Templates  Doc Type  Get"
                 }
               }
             }
@@ -960,39 +1089,6 @@
         ],
         "title": "BatchSummary"
       },
-      "CoqTemplate": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "version": {
-            "type": "string",
-            "title": "Version"
-          },
-          "doc_class": {
-            "type": "string",
-            "title": "Doc Class",
-            "default": "flower_coq"
-          },
-          "render_engine": {
-            "type": "string",
-            "title": "Render Engine",
-            "default": "weasyprint"
-          },
-          "is_active": {
-            "type": "boolean",
-            "title": "Is Active",
-            "default": true
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "version"
-        ],
-        "title": "CoqTemplate"
-      },
       "DashboardSummary": {
         "properties": {
           "batches_in_testing": {
@@ -1171,6 +1267,50 @@
         ],
         "title": "DocumentRef",
         "description": "A source certificate (iCoA/eCoA) in feeds and ingestion lists."
+      },
+      "DocumentTemplate": {
+        "properties": {
+          "doc_type": {
+            "type": "string",
+            "title": "Doc Type"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "doc_class": {
+            "type": "string",
+            "title": "Doc Class",
+            "default": "flower_coq"
+          },
+          "render_engine": {
+            "type": "string",
+            "title": "Render Engine",
+            "default": "weasyprint"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "active"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "doc_type",
+          "name",
+          "version"
+        ],
+        "title": "DocumentTemplate",
+        "description": "A versioned template for a document the app GENERATES (iCoA/CoQ/CoA/Spec)."
       },
       "HTTPValidationError": {
         "properties": {
@@ -1593,6 +1733,17 @@
               }
             ],
             "title": "Default Method Family"
+          },
+          "default_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Source"
           }
         },
         "type": "object",
@@ -1969,6 +2120,45 @@
           "param_name"
         ],
         "title": "SpecParameter"
+      },
+      "TemplateUpload": {
+        "properties": {
+          "doc_type": {
+            "type": "string",
+            "title": "Doc Type"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "html": {
+            "type": "string",
+            "title": "Html"
+          },
+          "doc_class": {
+            "type": "string",
+            "title": "Doc Class",
+            "default": "flower_coq"
+          },
+          "render_engine": {
+            "type": "string",
+            "title": "Render Engine",
+            "default": "weasyprint"
+          }
+        },
+        "type": "object",
+        "required": [
+          "doc_type",
+          "name",
+          "version",
+          "html"
+        ],
+        "title": "TemplateUpload",
+        "description": "Upload a new template version; supersedes the prior active for its doc_type."
       },
       "ValidationError": {
         "properties": {

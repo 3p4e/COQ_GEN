@@ -1,0 +1,2015 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "COQ_GEN Core API",
+    "summary": "Local sidecar: orchestration, DB access, COQ engine (Phase 0 scaffold).",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthz/db": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health Db",
+        "operationId": "health_db_healthz_db_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DbHealth"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthz/gateway": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health Gateway",
+        "operationId": "health_gateway_healthz_gateway_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Health Gateway Healthz Gateway Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/specs": {
+      "get": {
+        "tags": [
+          "specs"
+        ],
+        "summary": "List Specs",
+        "operationId": "list_specs_specs_get",
+        "parameters": [
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductSpec"
+                  },
+                  "title": "Response List Specs Specs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/specs/{spec_code}/{version}": {
+      "get": {
+        "tags": [
+          "specs"
+        ],
+        "summary": "Get Spec",
+        "operationId": "get_spec_specs__spec_code___version__get",
+        "parameters": [
+          {
+            "name": "spec_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Spec Code"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Version"
+            }
+          },
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductSpec"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ingest": {
+      "post": {
+        "tags": [
+          "ingest"
+        ],
+        "summary": "Ingest",
+        "operationId": "ingest_ingest_post",
+        "parameters": [
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestAccepted"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dashboard/summary": {
+      "get": {
+        "tags": [
+          "dashboard"
+        ],
+        "summary": "Summary",
+        "operationId": "summary_dashboard_summary_get",
+        "parameters": [
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/batches": {
+      "get": {
+        "tags": [
+          "batches"
+        ],
+        "summary": "List Batches",
+        "operationId": "list_batches_batches_get",
+        "parameters": [
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BatchSummary"
+                  },
+                  "title": "Response List Batches Batches Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/batches/{batch_no}": {
+      "get": {
+        "tags": [
+          "batches"
+        ],
+        "summary": "Get Batch",
+        "operationId": "get_batch_batches__batch_no__get",
+        "parameters": [
+          {
+            "name": "batch_no",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Batch No"
+            }
+          },
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Batch"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/batches/{batch_no}/master-parameters": {
+      "get": {
+        "tags": [
+          "batches"
+        ],
+        "summary": "Master Parameters",
+        "operationId": "master_parameters_batches__batch_no__master_parameters_get",
+        "parameters": [
+          {
+            "name": "batch_no",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Batch No"
+            }
+          },
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MasterParameterLine"
+                  },
+                  "title": "Response Master Parameters Batches  Batch No  Master Parameters Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/register": {
+      "get": {
+        "tags": [
+          "register"
+        ],
+        "summary": "Register",
+        "operationId": "register_register_get",
+        "parameters": [
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RegisterEntry"
+                  },
+                  "title": "Response Register Register Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oos": {
+      "get": {
+        "tags": [
+          "register"
+        ],
+        "summary": "Oos",
+        "operationId": "oos_oos_get",
+        "parameters": [
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OOSItem"
+                  },
+                  "title": "Response Oos Oos Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/coq/templates": {
+      "get": {
+        "tags": [
+          "coq"
+        ],
+        "summary": "Templates",
+        "operationId": "templates_coq_templates_get",
+        "parameters": [
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CoqTemplate"
+                  },
+                  "title": "Response Templates Coq Templates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/labs": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Labs",
+        "operationId": "labs_labs_get",
+        "parameters": [
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LabInstitution"
+                  },
+                  "title": "Response Labs Labs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/parameters": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Parameters",
+        "operationId": "parameters_parameters_get",
+        "parameters": [
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ParameterDictionaryEntry"
+                  },
+                  "title": "Response Parameters Parameters Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Batch": {
+        "properties": {
+          "production_batch_number": {
+            "type": "string",
+            "title": "Production Batch Number"
+          },
+          "product_name": {
+            "type": "string",
+            "title": "Product Name"
+          },
+          "strain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strain"
+          },
+          "dominance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dominance"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "grade_designation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade Designation"
+          },
+          "spec_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spec Code"
+          },
+          "spec_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spec Version"
+          },
+          "spec_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spec Reference"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "production_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Production Date"
+          },
+          "quantity_kg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity Kg"
+          },
+          "lineage": {
+            "$ref": "#/components/schemas/LineageRef"
+          }
+        },
+        "type": "object",
+        "required": [
+          "production_batch_number",
+          "product_name",
+          "status",
+          "lineage"
+        ],
+        "title": "Batch"
+      },
+      "BatchSummary": {
+        "properties": {
+          "production_batch_number": {
+            "type": "string",
+            "title": "Production Batch Number"
+          },
+          "packaging_batch_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Packaging Batch Number"
+          },
+          "product_name": {
+            "type": "string",
+            "title": "Product Name"
+          },
+          "dominance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dominance"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "grade_designation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade Designation"
+          },
+          "spec_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spec Reference"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "params_total": {
+            "type": "integer",
+            "title": "Params Total",
+            "default": 0
+          },
+          "params_conforming": {
+            "type": "integer",
+            "title": "Params Conforming",
+            "default": 0
+          },
+          "params_pending": {
+            "type": "integer",
+            "title": "Params Pending",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "production_batch_number",
+          "product_name",
+          "status"
+        ],
+        "title": "BatchSummary"
+      },
+      "CoqTemplate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "doc_class": {
+            "type": "string",
+            "title": "Doc Class",
+            "default": "flower_coq"
+          },
+          "render_engine": {
+            "type": "string",
+            "title": "Render Engine",
+            "default": "weasyprint"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "version"
+        ],
+        "title": "CoqTemplate"
+      },
+      "DashboardSummary": {
+        "properties": {
+          "batches_in_testing": {
+            "type": "integer",
+            "title": "Batches In Testing",
+            "default": 0
+          },
+          "ecoa_pending_review": {
+            "type": "integer",
+            "title": "Ecoa Pending Review",
+            "default": 0
+          },
+          "coqs_issued_this_year": {
+            "type": "integer",
+            "title": "Coqs Issued This Year",
+            "default": 0
+          },
+          "open_oos": {
+            "type": "integer",
+            "title": "Open Oos",
+            "default": 0
+          },
+          "recent_documents": {
+            "items": {
+              "$ref": "#/components/schemas/DocumentRef"
+            },
+            "type": "array",
+            "title": "Recent Documents",
+            "default": []
+          },
+          "recent_batches": {
+            "items": {
+              "$ref": "#/components/schemas/BatchSummary"
+            },
+            "type": "array",
+            "title": "Recent Batches",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "DashboardSummary"
+      },
+      "DbHealth": {
+        "properties": {
+          "connected": {
+            "type": "boolean",
+            "title": "Connected"
+          },
+          "server_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server Version"
+          },
+          "tables": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tables"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "connected"
+        ],
+        "title": "DbHealth"
+      },
+      "DocumentRef": {
+        "properties": {
+          "document_code": {
+            "type": "string",
+            "title": "Document Code"
+          },
+          "cert_type": {
+            "type": "string",
+            "title": "Cert Type",
+            "default": "eCoA"
+          },
+          "doc_type": {
+            "type": "string",
+            "title": "Doc Type",
+            "default": "cannabis_coa"
+          },
+          "institution_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Name"
+          },
+          "lab_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lab Code"
+          },
+          "batch_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batch Number"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Date"
+          },
+          "register_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Register Status"
+          },
+          "extraction_confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extraction Confidence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "document_code"
+        ],
+        "title": "DocumentRef",
+        "description": "A source certificate (iCoA/eCoA) in feeds and ingestion lists."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Health": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "service",
+          "version"
+        ],
+        "title": "Health"
+      },
+      "IngestAccepted": {
+        "properties": {
+          "received": {
+            "type": "integer",
+            "title": "Received"
+          },
+          "document_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Document Codes",
+            "default": []
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "default": "Phase 0 stub: OCR/parse/embed + agent extraction land in Phase 1-2."
+          }
+        },
+        "type": "object",
+        "required": [
+          "received"
+        ],
+        "title": "IngestAccepted",
+        "description": "Phase 0 stub response for an accepted ingest request."
+      },
+      "IngestRequest": {
+        "properties": {
+          "batch_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batch Hint"
+          },
+          "filenames": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Filenames",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "IngestRequest"
+      },
+      "LabInstitution": {
+        "properties": {
+          "lab_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lab Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "credentials": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credentials"
+          },
+          "default_language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Language"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "LabInstitution"
+      },
+      "LineageRef": {
+        "properties": {
+          "cultivation_batch_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cultivation Batch Number"
+          },
+          "production_batch_number": {
+            "type": "string",
+            "title": "Production Batch Number"
+          },
+          "packaging_batch_numbers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Packaging Batch Numbers",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "production_batch_number"
+        ],
+        "title": "LineageRef"
+      },
+      "MasterParameterLine": {
+        "properties": {
+          "canonical_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Key"
+          },
+          "param_name": {
+            "type": "string",
+            "title": "Param Name"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "acceptance_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acceptance Text"
+          },
+          "result_display": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Display"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "verdict": {
+            "type": "string",
+            "title": "Verdict",
+            "default": "pending"
+          },
+          "source_institution_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Institution Name"
+          },
+          "source_lab_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Lab Code"
+          },
+          "source_document_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Document Code"
+          },
+          "source_document_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Document Date"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "draft"
+          }
+        },
+        "type": "object",
+        "required": [
+          "param_name"
+        ],
+        "title": "MasterParameterLine",
+        "description": "Single source-of-truth parameter row for the Batch Record + COQ lines."
+      },
+      "OOSItem": {
+        "properties": {
+          "batch_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batch No"
+          },
+          "canonical_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Key"
+          },
+          "param_name": {
+            "type": "string",
+            "title": "Param Name"
+          },
+          "result_display": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Display"
+          },
+          "acceptance_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acceptance Text"
+          },
+          "source_document_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Document Code"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "open"
+          }
+        },
+        "type": "object",
+        "required": [
+          "param_name"
+        ],
+        "title": "OOSItem",
+        "description": "An out-of-specification result blocking CoQ issuance (OOS/NCR view)."
+      },
+      "ParameterDictionaryEntry": {
+        "properties": {
+          "canonical_key": {
+            "type": "string",
+            "title": "Canonical Key"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "canonical_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Unit"
+          },
+          "default_method_family": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Method Family"
+          }
+        },
+        "type": "object",
+        "required": [
+          "canonical_key",
+          "display_name",
+          "category"
+        ],
+        "title": "ParameterDictionaryEntry"
+      },
+      "ProductSpec": {
+        "properties": {
+          "spec_code": {
+            "type": "string",
+            "title": "Spec Code"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "IMG | IPM | FP | IMB"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "dominance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dominance",
+            "description": "THC | CBD (strain-agnostic)"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "active"
+          },
+          "effective_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective From"
+          },
+          "parameters": {
+            "items": {
+              "$ref": "#/components/schemas/SpecParameter"
+            },
+            "type": "array",
+            "title": "Parameters",
+            "default": []
+          },
+          "grades": {
+            "items": {
+              "$ref": "#/components/schemas/SpecGrade"
+            },
+            "type": "array",
+            "title": "Grades",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "spec_code",
+          "version",
+          "category",
+          "title"
+        ],
+        "title": "ProductSpec"
+      },
+      "RegisterEntry": {
+        "properties": {
+          "cert_type": {
+            "type": "string",
+            "title": "Cert Type"
+          },
+          "certificate_number": {
+            "type": "string",
+            "title": "Certificate Number"
+          },
+          "seq_no": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seq No"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "batch_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batch No"
+          },
+          "product_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Name"
+          },
+          "spec_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spec Ref"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Date"
+          },
+          "prepared_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prepared By"
+          },
+          "reviewed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed By"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "oos_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oos Ref"
+          },
+          "archive_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archive Ref"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cert_type",
+          "certificate_number",
+          "status"
+        ],
+        "title": "RegisterEntry",
+        "description": "Certificate Issuance Register row (iCoA/eCoA/CoQ) \u2014 QCSOP 012 v3."
+      },
+      "SpecGrade": {
+        "properties": {
+          "grade": {
+            "type": "string",
+            "title": "Grade"
+          },
+          "designation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Designation"
+          },
+          "product_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Code"
+          },
+          "thc_low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thc Low"
+          },
+          "thc_high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thc High"
+          },
+          "cbd_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cbd Max"
+          }
+        },
+        "type": "object",
+        "required": [
+          "grade"
+        ],
+        "title": "SpecGrade"
+      },
+      "SpecParameter": {
+        "properties": {
+          "display_order": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Order"
+          },
+          "param_name": {
+            "type": "string",
+            "title": "Param Name"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "operator": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operator"
+          },
+          "limit_low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Low"
+          },
+          "limit_high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit High"
+          },
+          "limit_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Text"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "param_name"
+        ],
+        "title": "SpecParameter"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

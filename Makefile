@@ -37,6 +37,9 @@ test-sql: ## SQL schema + smoke + OpenAPI checks (needs local postgres)
 lint:
 	$(VENV)/bin/ruff check services packages
 
+gen-types: ## regenerate apps/desktop/src/types/api.d.ts from the Core API OpenAPI
+	PY=$(abspath $(PY)) bash scripts/gen_types.sh
+
 ui-install:
 	cd apps/desktop && npm install
 

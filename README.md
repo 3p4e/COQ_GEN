@@ -115,6 +115,31 @@ are deliberately excluded from the gateway route map. See the full suitability m
 
 ## 5. Status
 
-Design complete; implementation tracked in [docs/07_ROADMAP.md](docs/07_ROADMAP.md). Start with
-**Phase 0 (foundations)** → **Phase 1 (ingestion)** → **Phase 2 (orchestration)** →
-**Phase 3 (COQ engine)** → **Phase 4 (validation/CSV)**.
+Design complete; **Phase 0 (foundations) scaffolded and running.** Next:
+**Phase 1 (ingestion)** → **Phase 2 (orchestration)** → **Phase 3 (COQ engine)** →
+**Phase 4 (validation/CSV)** — see [docs/07_ROADMAP.md](docs/07_ROADMAP.md).
+
+### Phase 0 — what's built and verified
+
+| Component | Path | State |
+|-----------|------|-------|
+| Core API sidecar (FastAPI, localhost) | `services/core_api/` | **runs**: `/health`, `/healthz/db`, `/healthz/gateway`, `/specs`, `/ingest` (stub); token auth |
+| Letta gateway (FastAPI, KVM4) | `services/gateway/` | **runs**: health + allow-listed `agents/{name}/invoke` (suitable agents only) |
+| Shared contracts | `packages/schemas/` | Pydantic v2 → TS codegen source |
+| Alembic baseline | `db/migrations/` | `alembic upgrade head` applies `db/schema.sql` (25 tables) |
+| Desktop shell | `apps/desktop/` | Tauri 2 + React/TS; spawns the sidecar; type-checks + `vite build` in CI |
+| CI | `.github/workflows/ci.yml` | postgres+pgvector service: SQL smoke, alembic, OpenAPI, pytest, ruff, UI build |
+
+### Quickstart (local dev)
+
+```bash
+make install                 # venv + deps + editable packages
+make setup                   # postgres role/db + alembic baseline + real spec fixtures
+make api                     # Core API on http://127.0.0.1:8765
+# in another shell:
+curl -s localhost:8765/health
+curl -s -H "X-COQGEN-Token: dev-session-token" localhost:8765/specs
+make test                    # python unit tests
+make test-sql                # SQL schema+smoke+OpenAPI checks
+cd apps/desktop && npm install && npm run tauri dev   # desktop shell (needs Rust + webview deps)
+```

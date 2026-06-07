@@ -40,7 +40,8 @@ importer's Qualified Person needs for Annex‑16 batch certification.
 
 | Group | Mandatory fields |
 |-------|------------------|
-| Identity | Product name, strain, dosage/grade, **Batch Number**, **Packaging Batch Number**, lineage (cultivation/production), quantity |
+| Identity | Product name, **dominance (THC/CBD) + grade tier**, **Batch Number**, **Packaging Batch Number**, lineage (cultivation/production), quantity. **Strain** is printed as *descriptive* plant information, not as a spec selector. |
+| Conformance basis | The applicable **strain‑agnostic** product spec reference + version (`QCSP-IMB-001 v.01` or `QCSP-FP-001 v.01`); the THC assay verdict is evaluated against the batch's **grade** window from `spec_grade` |
 | Specification | Spec reference + version (`QCSP-IMB-001 v02`), parameter list with limits |
 | Results | For each parameter: name, **testing method**, acceptance criteria, result + unit + qualifier, **verdict** |
 | Source mapping | For each result: **issuing institution** (name/address/credentials) + **source eCOA document code + date** |

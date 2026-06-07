@@ -19,7 +19,7 @@ Rules previously inferred from agent memory are now anchored to the SOP clauses.
 | C3 | **Numbering is per certificate type, per calendar year**, strictly monotonic; gaps are ALCOA+ data‑integrity events. | QCSOP 012 v3 §6.9.1 | `coq_sequence` → `cert_sequence(cert_type, year)`; smoke T1/T1b |
 | C4 | **The register tracks iCoA, eCoA and CoQ** (eCoA gets `eCoA-PP-YYYY-NNNN` + a register row on receipt, status Pending Review→Accepted). | QCSOP 012 v3 §6.3.2, §6.9 | `register_entry` generalised (nullable `coq_id` + `ecoa_document_id`, `UNIQUE(cert_type,year,seq_no)`) |
 | C5 | **Issuing a CoQ for a batch with an open OOS is a reportable deviation** (QASOP 010). | QCSOP 012 v3 §6.6, §6.11 | Compliance Guard rule added (docs 06 §6.4) |
-| C6 | **Each strain gets its own spec number** even if parameters are identical. | QCSOP 010 §6.6 | `product_spec.strain`; note in docs 03 |
+| C6 | **Specs are strain‑agnostic (owner policy).** QCSOP 010 §6.6 *allows* per‑strain spec numbers, but the owner has decided **not to recognise strains**: `QCSP-IMB-001`/`QCSP-FP-001` apply to all products; classification is by **cannabinoid dominance (THC/CBD) + grade tier**. Strain is descriptive only and is printed on the CoQ. | QCSOP 010 §6.6 + owner ruling | `product_spec.dominance` (strain column removed); `production_batch.dominance/grade`; strain stays on `cultivation_batch` |
 | C7 | **Master Specification Register** with Active/Superseded/Withdrawn lifecycle. | QCSOP 010 §6.10 | `product_spec.status` |
 
 ## 9.2 What the SOPs CONFIRMED (design already correct)
@@ -78,8 +78,11 @@ so the policy is enforced by configuration, not code.
 1. **GMP facility wording** (EU vs MK) — §9.4.
 2. **iCoA/eCoA seed counters** — current per‑type, per‑year sequence values for 2025/2026 (CoQ is
    known: 2025→0032, 2026→0009; iCoA/eCoA counters needed to seed `cert_sequence`).
-3. **Spec applicability** — confirm whether `QCSP-IMB-001`/`QCSP-FP-001` are strain‑agnostic
-   master specs or whether per‑strain spec numbers exist (QCSOP 010 §6.6 implies per‑strain).
+3. **Spec applicability** — RESOLVED (owner ruling): `QCSP-IMB-001`/`QCSP-FP-001` are
+   **strain‑agnostic** and apply to all products; classification is by **dominance + grade**, not
+   strain. The CoQ references the product spec as the conformance basis **and additionally states
+   the strain** as descriptive plant information. Recommend documenting this classification policy
+   in QCSOP 010 at next revision (it narrows the §6.6 per‑strain option).
 4. **Active spec version** — the agent referenced `QCSP-IMB-001 v02`; the supplied document is
    `v.01` (26 May 2026, superseding legacy `PP-QC-SPEC-IB-001 v02`). Confirm the authoritative version.
 5. **Annex A02/A03/A05 templates** — obtain the controlled CoQ/checklist/register templates to

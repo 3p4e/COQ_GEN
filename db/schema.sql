@@ -82,13 +82,16 @@ CREATE TABLE cultivation_batch (
 
 -- Master Specification Register (QCSOP 010 §6.10): one row per spec version.
 -- Coding (QCSOP 010 §6.6, via QAWI 002): QCSP-[CAT]-[NNN] v.[VV].
+-- Owner policy: specs are STRAIN-AGNOSTIC. QCSP-IMB-001 / QCSP-FP-001 apply to all
+-- products; classification is by cannabinoid dominance (THC|CBD) + grade tier (I-V),
+-- never by strain. Strain is recorded on the batch and printed on the CoQ descriptively.
 CREATE TABLE product_spec (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     spec_code           TEXT NOT NULL,            -- QCSP-IMB-001
     version             TEXT NOT NULL,            -- v.01
     category            TEXT NOT NULL,            -- IMG | IPM | FP | IMB  (QCSOP 010 §6.6)
     title               TEXT NOT NULL,
-    strain              TEXT,                     -- QCSOP 010 §6.6: each strain gets its own spec number
+    dominance           TEXT,                     -- THC | CBD  (this revision: THC-dominant, CBD < 1.0%)
     status              TEXT NOT NULL DEFAULT 'active', -- active | superseded | withdrawn
     is_active           BOOLEAN NOT NULL DEFAULT TRUE,
     effective_from      DATE,
@@ -100,7 +103,10 @@ CREATE TABLE production_batch (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     batch_number            TEXT NOT NULL UNIQUE,    -- PB-2026-0011  (the brief's "Batch Number")
     cultivation_batch_id    UUID NOT NULL REFERENCES cultivation_batch(id),
-    product_spec_id         UUID REFERENCES product_spec(id),
+    product_spec_id         UUID REFERENCES product_spec(id),  -- QCSP-IMB-001 / QCSP-FP-001 (strain-agnostic)
+    dominance               TEXT,                   -- THC | CBD  (classification driver, not strain)
+    grade                   TEXT,                   -- grade tier 'I'..'V' (maps to spec_grade.grade)
+    grade_designation       TEXT,                   -- 'THC27' (denormalised from spec_grade for the CoQ)
     product_name            TEXT NOT NULL,
     production_date         DATE,
     quantity_kg             NUMERIC(12,3),

@@ -36,9 +36,10 @@ INSERT INTO parameter_dictionary(canonical_key,display_name,category,canonical_u
 ON CONFLICT (canonical_key) DO NOTHING;
 
 -- ---- the two specs --------------------------------------------------------
-INSERT INTO product_spec(spec_code,version,category,title,is_active,effective_from) VALUES
- ('QCSP-IMB-001','v.01','IMB','Cannabis flos - Intermediate Bulk & sFP (Ph. Eur. 3028)', true,'2026-05-26'),
- ('QCSP-FP-001','v.01','FP','Cannabis flos - Finished Product, pharmacy dispensing (Ph. Eur. 3028)', true,'2026-05-26')
+-- strain-agnostic; THC-dominant this revision (CBD < 1.0%)
+INSERT INTO product_spec(spec_code,version,category,title,dominance,is_active,effective_from) VALUES
+ ('QCSP-IMB-001','v.01','IMB','Cannabis flos - Intermediate Bulk & sFP (Ph. Eur. 3028)','THC', true,'2026-05-26'),
+ ('QCSP-FP-001','v.01','FP','Cannabis flos - Finished Product, pharmacy dispensing (Ph. Eur. 3028)','THC', true,'2026-05-26')
 ON CONFLICT (spec_code,version) DO NOTHING;
 
 -- ---- shared analytical panel (18 parameters) ------------------------------

@@ -35,7 +35,10 @@ mandatory release field, or bakes in a forbidden string, is **rejected at upload
 {{ template.name }}  {{ template.version }}
 
 {# Identity + lineage #}
-{{ batch.product_name }}  {{ batch.strain }}  {{ batch.thc_grade }}
+{{ batch.product_name }}
+{{ batch.dominance }}  {{ batch.grade }}  {{ batch.grade_designation }}  {# classification: THC/CBD + tier I-V #}
+{{ coq.spec_reference }}                       {# conformance basis: QCSP-IMB-001 v.01 (strain-agnostic) #}
+{{ batch.strain }}                             {# DESCRIPTIVE plant info only - NOT a spec selector #}
 {{ batch.production_batch_number }}            {# Batch Number #}
 {{ batch.packaging_batch_number }}            {# Packaging Batch Number #}
 {{ lineage.cultivation_batch_number }}  {{ lineage.production_batch_number }}

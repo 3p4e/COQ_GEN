@@ -5,7 +5,9 @@ POST /coq/preview, /coq/issue, /icoa/preview, /icoa/issue.
   issue   = guard must pass (block findings need override_reason) -> transactional numbering
             -> register write -> persist rendered artifact. Atomic.
 
-PDF/A export + dual e-signature are later steps (docs/06 §6.8-6.9); this is the HTML issue path.
+The render context implements the Variation F token contract (templates/coq/README.md):
+coq/spec/product/batch/lineage/labs[]/parameter_groups[]/conformance/sources[]/signatories[]/
+manufacturer. PDF/A export + dual e-signature are later steps (docs/06 §6.8-6.9).
 """
 from __future__ import annotations
 
@@ -30,6 +32,13 @@ _DOC = {  # doc_type -> (cert_type, doc_class, title, internal_only)
     "coq": ("CoQ", "flower_coq", "Certificate of Quality", False),
     "icoa": ("iCoA", "flower_icoa", "Internal Certificate of Analysis", True),
 }
+_CAT_LABEL = {
+    "identity": "Identification", "cannabinoids": "Cannabinoids / Assay", "physical": "Physical Tests",
+    "microbiology": "Microbiology", "mycotoxins": "Mycotoxins", "heavy_metals": "Heavy Metals",
+    "pesticides": "Pesticides", "water_activity": "Water Activity", "residual_solvents": "Residual Solvents",
+}
+_CAT_ORDER = list(_CAT_LABEL)
+_STATUS_LABEL = {"pass": "Pass", "fail": "OOS", "pending": "Pending", "not_tested": "Not Tested"}
 
 
 def _result_display(r) -> str | None:
@@ -38,7 +47,6 @@ def _result_display(r) -> str | None:
 
 
 async def _config(session: AsyncSession, doc_class: str) -> dict:
-    """Load forbidden strings / GMP wording / signatories for a doc_class (fallback flower_coq)."""
     async def rows(domain: str, dc: str):
         return (await session.execute(
             text("SELECT term, payload FROM controlled_vocabulary "
@@ -50,8 +58,9 @@ async def _config(session: AsyncSession, doc_class: str) -> dict:
     sigs = await rows("signatory", doc_class) or await rows("signatory", "flower_coq")
     signatories = sorted(
         ({"meaning": s["term"], "role": (s["payload"] or {}).get("role"),
-          "qualified_person": bool((s["payload"] or {}).get("qualified_person"))} for s in sigs),
-        key=lambda x: x.get("role") or "",
+          "qualified_person": bool((s["payload"] or {}).get("qualified_person")),
+          "slot": (s["payload"] or {}).get("slot", 0)} for s in sigs),
+        key=lambda x: x["slot"],
     )
     return {
         "forbidden_strings": [s["term"] for s in forbidden],
@@ -61,16 +70,24 @@ async def _config(session: AsyncSession, doc_class: str) -> dict:
     }
 
 
+async def _appcfg(session: AsyncSession, key: str, default: dict) -> dict:
+    row = (await session.execute(
+        text("SELECT value FROM app_config WHERE key=:k"), {"k": key})).scalar_one_or_none()
+    return row if isinstance(row, dict) else default
+
+
 async def _gather(session: AsyncSession, doc_type: str, req) -> dict:
     cert_type, doc_class, title, internal_only = _DOC[doc_type]
-    # Resolve the production batch (CoQ via packaging; iCoA via production).
+    cols = ("pb.id AS prod_id, pb.batch_number AS production_batch_number, pb.product_name, "
+            "pb.dominance, pb.grade, pb.grade_designation, pb.production_date, pb.quantity_kg, "
+            "cb.batch_number AS cultivation_batch_number, cb.strain, "
+            "ps.id AS spec_id, ps.spec_code, ps.version AS spec_version, ps.title AS spec_title")
     if doc_type == "coq":
         if not req.packaging_batch_number:
             raise HTTPException(422, "packaging_batch_number is required for CoQ")
         head = (await session.execute(text(
-            "SELECT pb.id AS prod_id, pk.id AS pkg_id, pb.batch_number AS production_batch_number, "
-            "pk.packaging_batch_number, pb.product_name, pb.dominance, pb.grade, pb.grade_designation, "
-            "cb.strain, ps.spec_code, ps.version AS spec_version "
+            f"SELECT {cols}, pk.id AS pkg_id, pk.packaging_batch_number, pk.pack_format, "
+            "pk.quantity_units, pk.packaging_date "
             "FROM packaging_batch pk JOIN production_batch pb ON pb.id=pk.production_batch_id "
             "LEFT JOIN cultivation_batch cb ON cb.id=pb.cultivation_batch_id "
             "LEFT JOIN product_spec ps ON ps.id=pb.product_spec_id "
@@ -79,9 +96,8 @@ async def _gather(session: AsyncSession, doc_type: str, req) -> dict:
         if not req.production_batch_number:
             raise HTTPException(422, "production_batch_number is required for iCoA")
         head = (await session.execute(text(
-            "SELECT pb.id AS prod_id, NULL AS pkg_id, pb.batch_number AS production_batch_number, "
-            "NULL AS packaging_batch_number, pb.product_name, pb.dominance, pb.grade, pb.grade_designation, "
-            "cb.strain, ps.spec_code, ps.version AS spec_version "
+            f"SELECT {cols}, NULL AS pkg_id, NULL AS packaging_batch_number, NULL AS pack_format, "
+            "NULL AS quantity_units, NULL AS packaging_date "
             "FROM production_batch pb LEFT JOIN cultivation_batch cb ON cb.id=pb.cultivation_batch_id "
             "LEFT JOIN product_spec ps ON ps.id=pb.product_spec_id "
             "WHERE pb.batch_number=:p"), {"p": req.production_batch_number})).mappings().first()
@@ -91,37 +107,117 @@ async def _gather(session: AsyncSession, doc_type: str, req) -> dict:
     filt = ("AND mp.canonical_key IN (SELECT canonical_key FROM parameter_dictionary "
             "WHERE default_source='internal')") if internal_only else ""
     rows = (await session.execute(text(
-        f"SELECT mp.canonical_key, sp.param_name, sp.method, sp.limit_text AS acceptance_text, "
+        "SELECT mp.canonical_key, sp.param_name, sp.method, sp.limit_text AS acceptance_text, "
         "mp.result_value, mp.result_text, mp.result_qualifier, mp.result_unit AS unit, mp.verdict, "
-        "mp.source_document_code, mp.source_document_date, i.name AS source_institution_name "
+        "mp.source_document_code, mp.source_document_date, pd.category, "
+        "i.name AS lab_name, i.lab_code, i.address AS lab_address, i.credentials AS lab_credentials "
         "FROM master_parameter mp JOIN production_batch pb ON pb.id=mp.production_batch_id "
         "LEFT JOIN spec_parameter sp ON sp.id=mp.spec_parameter_id "
         "LEFT JOIN institution i ON i.id=mp.source_institution_id "
+        "LEFT JOIN parameter_dictionary pd ON pd.canonical_key=mp.canonical_key "
         f"WHERE pb.id=:pid AND mp.status='confirmed' {filt} "
-        "ORDER BY sp.display_order NULLS LAST, sp.param_name"), {"pid": head["prod_id"]})).mappings().all()
-    lines = [{
-        "param_name": r["param_name"] or (r["canonical_key"] or "—"), "method": r["method"],
-        "acceptance_text": r["acceptance_text"], "result_display": _result_display(r),
-        "verdict": r["verdict"], "source_document_code": r["source_document_code"],
-        "source_document_date": str(r["source_document_date"]) if r["source_document_date"] else None,
-        "source_institution_name": r["source_institution_name"],
-    } for r in rows]
+        "ORDER BY pd.category NULLS LAST, sp.display_order NULLS LAST, sp.param_name"),
+        {"pid": head["prod_id"]})).mappings().all()
+
+    spec_ref = f"{head['spec_code']} {head['spec_version']}" if head["spec_code"] else None
+    product_code = None
+    if head["spec_id"] and head["grade"]:
+        product_code = (await session.execute(text(
+            "SELECT product_code FROM spec_grade WHERE product_spec_id=:s AND grade=:g"),
+            {"s": head["spec_id"], "g": head["grade"]})).scalar_one_or_none()
+
+    # flat lines (for the guard) + grouped params + labs + sources
+    flat, by_cat, labs, sources, seen_lab, seen_src = [], {}, [], [], {}, {}
+    for r in rows:
+        disp = _result_display(r)
+        flat.append({"param_name": r["param_name"] or (r["canonical_key"] or "—"),
+                     "verdict": r["verdict"], "source_document_code": r["source_document_code"],
+                     "source_document_date": str(r["source_document_date"]) if r["source_document_date"] else None,
+                     "source_institution_name": r["lab_name"]})
+        cat = r["category"] or "other"
+        by_cat.setdefault(cat, []).append({
+            "name": r["param_name"] or (r["canonical_key"] or "—"), "method": r["method"],
+            "acceptance": r["acceptance_text"], "result": disp, "verdict": r["verdict"],
+            "status_label": _STATUS_LABEL.get(r["verdict"], r["verdict"]),
+            "source_code": r["source_document_code"]})
+        if r["lab_code"] and r["lab_code"] not in seen_lab:
+            seen_lab[r["lab_code"]] = {"tag": r["lab_code"], "name": r["lab_name"],
+                                       "address": r["lab_address"], "credentials": r["lab_credentials"],
+                                       "_cats": set()}
+        if r["lab_code"]:
+            seen_lab[r["lab_code"]]["_cats"].add(_CAT_LABEL.get(cat, cat))
+        if r["source_document_code"] and r["source_document_code"] not in seen_src:
+            seen_src[r["source_document_code"]] = {
+                "code": r["source_document_code"], "lab": r["lab_name"],
+                "received": str(r["source_document_date"]) if r["source_document_date"] else None}
+    for lab in seen_lab.values():
+        lab["scope"] = ", ".join(sorted(lab.pop("_cats")))
+        labs.append(lab)
+    sources = list(seen_src.values())
+    parameter_groups = [{"label": _CAT_LABEL.get(c, c.title()), "params": by_cat[c]}
+                        for c in _CAT_ORDER if c in by_cat] + \
+                       [{"label": c.title(), "params": by_cat[c]} for c in by_cat if c not in _CAT_ORDER]
 
     cfg = await _config(session, doc_class)
-    spec_ref = f"{head['spec_code']} {head['spec_version']}" if head["spec_code"] else None
-    disposition = "Released" if lines and all(x["verdict"] == "pass" for x in lines) else None
+    man = await _appcfg(session, "manufacturer", {})
+    meta = await _appcfg(session, "coq_meta", {})
+    pmeta = await _appcfg(session, "product_meta", {})
+
+    has_fail = any(x["verdict"] == "fail" for x in flat)
+    has_gap = any(x["verdict"] in ("pending", "not_tested") for x in flat)
+    if not flat:
+        conformance = {"statement": "No parameters available.", "detail": ""}
+        disposition = None
+    elif has_fail:
+        oos = ", ".join(x["param_name"] for x in flat if x["verdict"] == "fail")
+        conformance = {"statement": f"OUT OF SPECIFICATION against {spec_ref}.",
+                       "detail": f"Out of Specification — {oos}"}
+        disposition = "Rejected"
+    elif has_gap:
+        conformance = {"statement": "Pending — parameter set incomplete.", "detail": ""}
+        disposition = None
+    else:
+        conformance = {"statement": f"This batch CONFORMS to specification {spec_ref}.",
+                       "detail": "All tested parameters meet the acceptance criteria."}
+        disposition = "Released"
+
     context = {
         "doc_title": title,
-        "coq": {"number": None, "spec_reference": spec_ref, "disposition": disposition},
-        "batch": {k: head[k] for k in ("product_name", "dominance", "grade", "grade_designation",
-                                       "production_batch_number", "packaging_batch_number", "strain")},
-        "lines": lines, "gmp_wording": cfg["gmp_wording"], "signatories": cfg["signatories"],
+        "coq": {"number": None, "version": meta.get("version"), "annex": meta.get("annex"),
+                "record_code": meta.get("record_code"), "sop_ref": meta.get("sop_ref"),
+                "coding_wi": meta.get("coding_wi"), "notice_text": meta.get("notice_text"),
+                "compilation_date": str(date.today()), "spec_reference": spec_ref,
+                "disposition": disposition},
+        "spec": {"reference": spec_ref},
+        "product": {"title": pmeta.get("title"), "description": pmeta.get("description"),
+                    "standard_line": pmeta.get("standard_line"), "code": product_code},
+        "batch": {"product_name": head["product_name"], "dominance": head["dominance"],
+                  "grade": head["grade"], "grade_designation": head["grade_designation"],
+                  "production_batch_number": head["production_batch_number"],
+                  "packaging_batch_number": head["packaging_batch_number"],
+                  "packaging_no": head["packaging_batch_number"], "strain": head["strain"],
+                  "size": head["pack_format"], "quantity": head["quantity_units"],
+                  "packaging_date": str(head["packaging_date"]) if head["packaging_date"] else None},
+        "lineage": {"cultivation": head["cultivation_batch_number"],
+                    "processing": head["production_batch_number"],
+                    "imb": head["production_batch_number"],
+                    "packaging": head["packaging_batch_number"]},
+        "labs": labs, "parameter_groups": parameter_groups, "sources": sources,
+        "conformance": conformance,
+        "signatories": [{"role": s["meaning"], "title": s["role"]} for s in cfg["signatories"]],
+        "manufacturer": {"name": man.get("name"), "address": man.get("address"),
+                         "gmp_line": man.get("gmp_line") or cfg["gmp_wording"], "motto": man.get("motto")},
+        # convenience for the fallback template + guard
+        "gmp_wording": man.get("gmp_line") or cfg["gmp_wording"],
+        "lines": [{"param_name": p["name"], "method": p["method"], "acceptance_text": p["acceptance"],
+                   "result_display": p["result"], "verdict": p["verdict"],
+                   "source_document_code": p["source_code"]} for g in parameter_groups for p in g["params"]],
     }
     return {"cert_type": cert_type, "doc_class": doc_class, "head": head, "spec_ref": spec_ref,
-            "context": context, "cfg": cfg, "lines": lines, "disposition": disposition}
+            "context": context, "cfg": cfg, "lines": flat, "disposition": disposition}
 
 
-def _guard(g: dict, rendered: str | None) -> "GuardContext":
+def _guard(g: dict, rendered: str | None):
     h, ctx = g["head"], g["context"]
     return build_guard_report(GuardContext(
         doc_type="coq" if g["cert_type"] == "CoQ" else "icoa", doc_class=g["doc_class"],
@@ -181,25 +277,22 @@ async def _issue(doc_type: str, req: IssueRequest, session: AsyncSession) -> Iss
             "VALUES (:num,:pkg,:prod,:spec,:tpl,:disp,'issued',:src,:sha,now()) RETURNING id"),
             {"num": number, "pkg": h["pkg_id"], "prod": h["prod_id"], "spec": g["spec_ref"],
              "tpl": tpl["id"], "disp": g["disposition"], "src": src_id, "sha": sha})).scalar_one()
-        subject = {"coq_id": coq_id, "ecoa_document_id": None}
-        reg_status = "active"
+        coq_ref, ecoa_ref, reg_status = coq_id, None, "active"
     else:
-        ecoa_id = (await session.execute(text(
+        ecoa_ref = (await session.execute(text(
             "INSERT INTO ecoa_document(document_code,cert_type,origin,register_status,source_file_id,"
             "production_batch_id,batch_number,doc_type,status) "
             "VALUES (:num,'iCoA','internal','accepted',:src,:prod,:bn,'cannabis_coa','committed') RETURNING id"),
             {"num": number, "src": src_id, "prod": h["prod_id"], "bn": h["production_batch_number"]})).scalar_one()
-        subject = {"coq_id": None, "ecoa_document_id": ecoa_id}
-        reg_status = "accepted"
+        coq_ref, reg_status = None, "accepted"
 
     sigs = g["cfg"]["signatories"]
     reg_id = (await session.execute(text(
         "INSERT INTO register_entry(cert_type,coq_id,ecoa_document_id,entry_no,seq_no,year,"
         "certificate_number,batch_no,product_name,spec_ref,issue_date,prepared_by,reviewed_by,status) "
         "VALUES (:ct,:coq,:ecoa,:eno,:seq,:yr,:num,:bn,:pn,:spec,current_date,:prep,:rev,:st) RETURNING id"),
-        {"ct": g["cert_type"], "coq": subject["coq_id"], "ecoa": subject["ecoa_document_id"],
-         "eno": entry_no, "seq": seq, "yr": year, "num": number, "bn": h["production_batch_number"],
-         "pn": h["product_name"], "spec": g["spec_ref"],
+        {"ct": g["cert_type"], "coq": coq_ref, "ecoa": ecoa_ref, "eno": entry_no, "seq": seq, "yr": year,
+         "num": number, "bn": h["production_batch_number"], "pn": h["product_name"], "spec": g["spec_ref"],
          "prep": (sigs[0]["role"] if sigs else None), "rev": (sigs[1]["role"] if len(sigs) > 1 else None),
          "st": reg_status})).scalar_one()
     await session.commit()

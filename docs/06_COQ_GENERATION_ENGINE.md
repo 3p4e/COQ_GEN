@@ -120,8 +120,12 @@ requirement) and exportable.
 
 ## 6.7 User‑uploaded HTML templates
 
-Templates are **user data**, version‑controlled in `coq_template`, validated on upload, rendered
-in a sandbox.
+Templates are **user data**, version‑controlled in the **`document_template`** store (covering
+**every** document the app generates — iCoA, CoQ, CoA, Spec), validated on upload, rendered in a
+sandbox. Uploading a new `.html` version supersedes the prior active template for that `doc_type`;
+**future** documents render with the active version while **issued** documents keep the exact
+version they were rendered with. Managed via `GET /templates`, `GET /templates/{doc_type}`,
+`POST /templates`. The mandatory‑token contract below is enforced per `doc_type` on upload.
 
 **Template contract** (see [templates/coq/README.md](../templates/coq/README.md)):
 

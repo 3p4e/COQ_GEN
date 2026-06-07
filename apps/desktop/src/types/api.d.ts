@@ -208,15 +208,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/coq/templates": {
+    "/templates": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Templates */
-        get: operations["templates_coq_templates_get"];
+        /** List Templates */
+        get: operations["list_templates_templates_get"];
+        put?: never;
+        /** Upload Template */
+        post: operations["upload_template_templates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/templates/{doc_type}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List For Type */
+        get: operations["list_for_type_templates__doc_type__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -325,28 +343,6 @@ export interface components {
              */
             params_pending: number;
         };
-        /** CoqTemplate */
-        CoqTemplate: {
-            /** Name */
-            name: string;
-            /** Version */
-            version: string;
-            /**
-             * Doc Class
-             * @default flower_coq
-             */
-            doc_class: string;
-            /**
-             * Render Engine
-             * @default weasyprint
-             */
-            render_engine: string;
-            /**
-             * Is Active
-             * @default true
-             */
-            is_active: boolean;
-        };
         /** DashboardSummary */
         DashboardSummary: {
             /**
@@ -420,6 +416,38 @@ export interface components {
             register_status?: string | null;
             /** Extraction Confidence */
             extraction_confidence?: number | null;
+        };
+        /**
+         * DocumentTemplate
+         * @description A versioned template for a document the app GENERATES (iCoA/CoQ/CoA/Spec).
+         */
+        DocumentTemplate: {
+            /** Doc Type */
+            doc_type: string;
+            /** Name */
+            name: string;
+            /** Version */
+            version: string;
+            /**
+             * Doc Class
+             * @default flower_coq
+             */
+            doc_class: string;
+            /**
+             * Render Engine
+             * @default weasyprint
+             */
+            render_engine: string;
+            /**
+             * Status
+             * @default active
+             */
+            status: string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -564,6 +592,8 @@ export interface components {
             canonical_unit?: string | null;
             /** Default Method Family */
             default_method_family?: string | null;
+            /** Default Source */
+            default_source?: string | null;
         };
         /** ProductSpec */
         ProductSpec: {
@@ -666,6 +696,30 @@ export interface components {
             limit_text?: string | null;
             /** Unit */
             unit?: string | null;
+        };
+        /**
+         * TemplateUpload
+         * @description Upload a new template version; supersedes the prior active for its doc_type.
+         */
+        TemplateUpload: {
+            /** Doc Type */
+            doc_type: string;
+            /** Name */
+            name: string;
+            /** Version */
+            version: string;
+            /** Html */
+            html: string;
+            /**
+             * Doc Class
+             * @default flower_coq
+             */
+            doc_class: string;
+            /**
+             * Render Engine
+             * @default weasyprint
+             */
+            render_engine: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -1041,9 +1095,11 @@ export interface operations {
             };
         };
     };
-    templates_coq_templates_get: {
+    list_templates_templates_get: {
         parameters: {
-            query?: never;
+            query?: {
+                include_superseded?: boolean;
+            };
             header?: {
                 "x-coqgen-token"?: string | null;
             };
@@ -1058,7 +1114,75 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CoqTemplate"][];
+                    "application/json": components["schemas"]["DocumentTemplate"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_template_templates_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-coqgen-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TemplateUpload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTemplate"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_for_type_templates__doc_type__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-coqgen-token"?: string | null;
+            };
+            path: {
+                doc_type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTemplate"][];
                 };
             };
             /** @description Validation Error */

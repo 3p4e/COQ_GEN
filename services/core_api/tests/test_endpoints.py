@@ -17,7 +17,8 @@ PROTECTED = [
     "/batches/PB-2026-0011/master-parameters",
     "/register",
     "/oos",
-    "/coq/templates",
+    "/templates",
+    "/templates/coq",
     "/labs",
     "/parameters",
 ]
@@ -31,5 +32,6 @@ def test_requires_session_token(path: str):
 def test_openapi_exposes_phase15_shapes():
     schemas = app.openapi()["components"]["schemas"]
     for name in ["DashboardSummary", "BatchSummary", "MasterParameterLine",
-                 "RegisterEntry", "OOSItem", "CoqTemplate", "LabInstitution"]:
+                 "RegisterEntry", "OOSItem", "DocumentTemplate", "TemplateUpload",
+                 "LabInstitution"]:
         assert name in schemas

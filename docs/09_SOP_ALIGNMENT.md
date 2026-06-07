@@ -87,3 +87,30 @@ so the policy is enforced by configuration, not code.
    `v.01` (26 May 2026, superseding legacy `PP-QC-SPEC-IB-001 v02`). Confirm the authoritative version.
 5. **Annex A02/A03/A05 templates** — obtain the controlled CoQ/checklist/register templates to
    bind the renderer and the upload‑validation token set exactly.
+
+## 9.7 iCoA vs eCoA, template management & test ownership (owner rulings)
+
+Confirmed by the owner; encoded in the schema/seed/endpoints:
+
+- **eCoA = outsourced.** Issued by contracted accredited labs; **format/layout differ per lab and
+  are entirely outside our control** (heterogeneous, multilingual, scanned or digital). The eCoA
+  path makes **no template assumptions** — OCR + visual understanding + agentic (RAAG) extraction +
+  per‑lab synonym learning + human review; original file preserved in its original language; an
+  internal cross‑ref `eCoA-PP-YYYY-NNNN` is assigned on receipt; conformance is re‑determined by
+  Purely Plant. eCoAs are **read, never formatted by us**.
+- **iCoA = internal, app‑generated.** An Annex produced from the CoA/CoQ SOP, rendered by the app
+  from a **controlled template** (final HTML to be supplied by owner). Numbered
+  `iCoA-PP-YYYY-NNNN` (per QCSOP 012). It is referenced as a source certificate in the batch's CoQ.
+- **Template management (first‑class feature).** *All* documents the app generates (iCoA, CoQ, CoA,
+  Spec) use the versioned `document_template` store: upload a new `.html` version → it supersedes
+  the prior active template for that `doc_type`; **future** documents render with the active
+  version, while **issued** documents keep the exact version they were rendered with. Endpoints:
+  `GET /templates`, `GET /templates/{doc_type}`, `POST /templates` (upload + auto‑supersede).
+  (Per‑doc_type mandatory‑token validation, docs/06 §6.7, is applied once each contract is final.)
+- **Test ownership** (`parameter_dictionary.default_source`):
+  - **internal → iCoA:** Appearance; Identification (macroscopic mon. 3028 / microscopic 2.8.23 /
+    HPLC 2.2.29–2.2.25); Foreign Matter (2.8.2).
+  - **external → eCoA:** assays (THC/CBD/CBN), Loss on Drying, microbiology, aflatoxins, heavy
+    metals, pesticides.
+  - **not_performed (capability gap):** HPTLC Identification Test C (THC+CBD zones, Ph. Eur.
+    2.8.25 / HPTLC C18) — **not done in‑house**; never expected or issued internally.

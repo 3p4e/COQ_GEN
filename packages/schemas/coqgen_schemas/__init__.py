@@ -163,12 +163,25 @@ class OOSItem(BaseModel):
     status: str = "open"              # open | under_investigation | closed
 
 
-class CoqTemplate(BaseModel):
+class DocumentTemplate(BaseModel):
+    """A versioned template for a document the app GENERATES (iCoA/CoQ/CoA/Spec)."""
+    doc_type: str                       # icoa | coq | coa | spec
     name: str
     version: str
     doc_class: str = "flower_coq"
     render_engine: str = "weasyprint"   # weasyprint | playwright
+    status: str = "active"             # active | superseded | draft
     is_active: bool = True
+
+
+class TemplateUpload(BaseModel):
+    """Upload a new template version; supersedes the prior active for its doc_type."""
+    doc_type: str                       # icoa | coq | coa | spec
+    name: str
+    version: str
+    html: str
+    doc_class: str = "flower_coq"
+    render_engine: str = "weasyprint"
 
 
 class LabInstitution(BaseModel):
@@ -185,6 +198,7 @@ class ParameterDictionaryEntry(BaseModel):
     category: str
     canonical_unit: str | None = None
     default_method_family: str | None = None
+    default_source: str | None = None   # internal (iCoA) | external (eCoA) | not_performed
 
 
 class DashboardSummary(BaseModel):

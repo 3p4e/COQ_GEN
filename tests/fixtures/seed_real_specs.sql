@@ -14,25 +14,31 @@
 BEGIN;
 
 -- ---- canonical parameter ontology -----------------------------------------
-INSERT INTO parameter_dictionary(canonical_key,display_name,category,canonical_unit) VALUES
- ('APPEARANCE','Appearance','physical',NULL),
- ('ID_THC_CBD','Identification (THC & CBD)','identity',NULL),
- ('THC_TOTAL','Total Delta-9-THC (assay)','cannabinoids','% w/w'),
- ('CBD_TOTAL','Total CBD (assay)','cannabinoids','% w/w'),
- ('CBN','Cannabinol (CBN)','cannabinoids','% w/w'),
- ('LOD','Loss on Drying','physical','% w/w'),
- ('FOREIGN_MATTER','Foreign Matter','physical','% w/w'),
- ('TAMC','Total Aerobic Microbial Count','microbiology','CFU/g'),
- ('TYMC','Total Yeast & Mould Count','microbiology','CFU/g'),
- ('BTGN','Bile-tolerant gram-negative bacteria','microbiology','CFU/g'),
- ('E_COLI','Escherichia coli','microbiology',NULL),
- ('SALMONELLA','Salmonella','microbiology',NULL),
- ('AFLATOXINS_TOTAL','Total Aflatoxins (B1+B2+G1+G2)','mycotoxins','ug/kg'),
- ('Pb','Lead (Pb)','heavy_metals','mg/kg'),
- ('Cd','Cadmium (Cd)','heavy_metals','mg/kg'),
- ('As','Arsenic (As)','heavy_metals','mg/kg'),
- ('Hg','Mercury (Hg)','heavy_metals','mg/kg'),
- ('PESTICIDES','Pesticides','pesticides',NULL)
+-- default_source: internal (Purely Plant QC -> iCoA) | external (outsourced -> eCoA)
+--                 | not_performed (capability not available in-house).
+-- Internal (iCoA) per owner: Appearance, Identification (macro mon.3028 / micro 2.8.23
+-- / HPLC 2.2.29-2.2.25), Foreign Matter (2.8.2). Everything else is outsourced (eCoA).
+INSERT INTO parameter_dictionary(canonical_key,display_name,category,canonical_unit,default_source) VALUES
+ ('APPEARANCE','Appearance','physical',NULL,'internal'),
+ ('ID_THC_CBD','Identification (macroscopic / microscopic / HPLC)','identity',NULL,'internal'),
+ ('FOREIGN_MATTER','Foreign Matter','physical','% w/w','internal'),
+ ('THC_TOTAL','Total Delta-9-THC (assay)','cannabinoids','% w/w','external'),
+ ('CBD_TOTAL','Total CBD (assay)','cannabinoids','% w/w','external'),
+ ('CBN','Cannabinol (CBN)','cannabinoids','% w/w','external'),
+ ('LOD','Loss on Drying','physical','% w/w','external'),
+ ('TAMC','Total Aerobic Microbial Count','microbiology','CFU/g','external'),
+ ('TYMC','Total Yeast & Mould Count','microbiology','CFU/g','external'),
+ ('BTGN','Bile-tolerant gram-negative bacteria','microbiology','CFU/g','external'),
+ ('E_COLI','Escherichia coli','microbiology',NULL,'external'),
+ ('SALMONELLA','Salmonella','microbiology',NULL,'external'),
+ ('AFLATOXINS_TOTAL','Total Aflatoxins (B1+B2+G1+G2)','mycotoxins','ug/kg','external'),
+ ('Pb','Lead (Pb)','heavy_metals','mg/kg','external'),
+ ('Cd','Cadmium (Cd)','heavy_metals','mg/kg','external'),
+ ('As','Arsenic (As)','heavy_metals','mg/kg','external'),
+ ('Hg','Mercury (Hg)','heavy_metals','mg/kg','external'),
+ ('PESTICIDES','Pesticides','pesticides',NULL,'external'),
+ -- capability gap: NOT performed in-house (owner note) — never expected/issued internally
+ ('ID_HPTLC_C','HPTLC Identification Test C (THC + CBD zones, Ph. Eur. 2.8.25 / HPTLC C18)','identity',NULL,'not_performed')
 ON CONFLICT (canonical_key) DO NOTHING;
 
 -- ---- the two specs --------------------------------------------------------

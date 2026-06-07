@@ -208,3 +208,49 @@ class DashboardSummary(BaseModel):
     open_oos: int = 0
     recent_documents: list[DocumentRef] = []
     recent_batches: list[BatchSummary] = []
+
+
+# ---------------------------------------------------------------------------
+# Generator / issue engine (docs/06). Preview = render + guard (no writes).
+# Issue = guard pass -> transactional numbering -> register write -> persist.
+# ---------------------------------------------------------------------------
+
+class GuardFinding(BaseModel):
+    code: str        # forbidden_string|missing_field|spec_gap|open_oos|wording|signatory|verdict|source_mapping
+    severity: str    # block | warn
+    message: str
+    detail: str | None = None
+
+
+class GuardReport(BaseModel):
+    ok: bool         # False if any severity == "block"
+    findings: list[GuardFinding] = []
+
+
+class GeneratePreviewRequest(BaseModel):
+    packaging_batch_number: str | None = None    # CoQ is issued at packaging level
+    production_batch_number: str | None = None    # iCoA is issued at production level
+    template_id: str | None = None                # default = the active template for the doc_type
+
+
+class PreviewResult(BaseModel):
+    doc_type: str                                 # coq | icoa
+    html: str                                     # rendered HTML (preview returns rendered HTML)
+    guard: GuardReport
+    proposed_number: str | None = None            # advisory; authoritative number assigned at issue
+
+
+class IssueRequest(BaseModel):
+    packaging_batch_number: str | None = None
+    production_batch_number: str | None = None
+    template_id: str | None = None
+    override_reason: str | None = None            # REQUIRED to issue when guard has block findings
+
+
+class IssueResult(BaseModel):
+    doc_type: str
+    certificate_number: str                        # CoQ-PP-YYYY-NNNN / iCoA-PP-YYYY-NNNN
+    sha256: str
+    guard: GuardReport
+    register_entry_id: str
+    html: str

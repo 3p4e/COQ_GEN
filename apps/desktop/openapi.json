@@ -760,6 +760,242 @@
         }
       }
     },
+    "/coq/preview": {
+      "post": {
+        "tags": [
+          "generator"
+        ],
+        "summary": "Coq Preview",
+        "operationId": "coq_preview_coq_preview_post",
+        "parameters": [
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GeneratePreviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/coq/issue": {
+      "post": {
+        "tags": [
+          "generator"
+        ],
+        "summary": "Coq Issue",
+        "operationId": "coq_issue_coq_issue_post",
+        "parameters": [
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/icoa/preview": {
+      "post": {
+        "tags": [
+          "generator"
+        ],
+        "summary": "Icoa Preview",
+        "operationId": "icoa_preview_icoa_preview_post",
+        "parameters": [
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GeneratePreviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/icoa/issue": {
+      "post": {
+        "tags": [
+          "generator"
+        ],
+        "summary": "Icoa Issue",
+        "operationId": "icoa_issue_icoa_issue_post",
+        "parameters": [
+          {
+            "name": "x-coqgen-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Coqgen-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/labs": {
       "get": {
         "tags": [
@@ -1312,6 +1548,100 @@
         "title": "DocumentTemplate",
         "description": "A versioned template for a document the app GENERATES (iCoA/CoQ/CoA/Spec)."
       },
+      "GeneratePreviewRequest": {
+        "properties": {
+          "packaging_batch_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Packaging Batch Number"
+          },
+          "production_batch_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Production Batch Number"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
+          }
+        },
+        "type": "object",
+        "title": "GeneratePreviewRequest"
+      },
+      "GuardFinding": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "severity",
+          "message"
+        ],
+        "title": "GuardFinding"
+      },
+      "GuardReport": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/GuardFinding"
+            },
+            "type": "array",
+            "title": "Findings",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok"
+        ],
+        "title": "GuardReport"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1399,6 +1729,93 @@
         },
         "type": "object",
         "title": "IngestRequest"
+      },
+      "IssueRequest": {
+        "properties": {
+          "packaging_batch_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Packaging Batch Number"
+          },
+          "production_batch_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Production Batch Number"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
+          },
+          "override_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Override Reason"
+          }
+        },
+        "type": "object",
+        "title": "IssueRequest"
+      },
+      "IssueResult": {
+        "properties": {
+          "doc_type": {
+            "type": "string",
+            "title": "Doc Type"
+          },
+          "certificate_number": {
+            "type": "string",
+            "title": "Certificate Number"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "guard": {
+            "$ref": "#/components/schemas/GuardReport"
+          },
+          "register_entry_id": {
+            "type": "string",
+            "title": "Register Entry Id"
+          },
+          "html": {
+            "type": "string",
+            "title": "Html"
+          }
+        },
+        "type": "object",
+        "required": [
+          "doc_type",
+          "certificate_number",
+          "sha256",
+          "guard",
+          "register_entry_id",
+          "html"
+        ],
+        "title": "IssueResult"
       },
       "LabInstitution": {
         "properties": {
@@ -1753,6 +2170,39 @@
           "category"
         ],
         "title": "ParameterDictionaryEntry"
+      },
+      "PreviewResult": {
+        "properties": {
+          "doc_type": {
+            "type": "string",
+            "title": "Doc Type"
+          },
+          "html": {
+            "type": "string",
+            "title": "Html"
+          },
+          "guard": {
+            "$ref": "#/components/schemas/GuardReport"
+          },
+          "proposed_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "doc_type",
+          "html",
+          "guard"
+        ],
+        "title": "PreviewResult"
       },
       "ProductSpec": {
         "properties": {

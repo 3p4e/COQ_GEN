@@ -64,6 +64,20 @@ INSERT INTO controlled_vocabulary(domain, doc_class, term, payload) VALUES
   ('signatory','flower_coq','Reviewed & Approved','{"role":"Head of QC","slot":2,"qualified_person":false}')
 ON CONFLICT DO NOTHING;
 
+-- Reference data the certificate templates render (manufacturer identity, COQ document
+-- metadata, generic product descriptors). Editable config, not code.
+INSERT INTO app_config(key, value, description) VALUES
+  ('manufacturer',
+   '{"name":"Purely Plant DOOEL","address":"Industriska ul. 9, s. Kojlija 1043, Petrovec, North Macedonia","gmp_line":"MK GMP Certified Facility (MALMED, Republic of North Macedonia)","motto":"The Future of Cannabis"}',
+   'Manufacturer identity printed on certificates'),
+  ('coq_meta',
+   '{"sop_ref":"QCSOP 012 v3","annex":"Annex A02","record_code":"QCLB 020 / Annex A05","coding_wi":"QCSOP 012 v3 §6.9.1","version":"v.01","notice_text":"This Certificate of Quality is a QC-internal specification-conformance aggregation supporting Qualified Person batch release; it is not itself an Annex 16 (EMA) batch release certificate."}',
+   'CoQ document control metadata'),
+  ('product_meta',
+   '{"title":"Cannabis flos","description":"Dried Cannabis Flower for Medicinal Use","standard_line":"Ph. Eur. Monograph 3028 · DAB 2018"}',
+   'Generic product descriptors for Cannabis flos')
+ON CONFLICT (key) DO NOTHING;
+
 -- ---------------------------------------------------------------------------
 -- 1. Lineage: cultivation -> production -> packaging
 -- ---------------------------------------------------------------------------

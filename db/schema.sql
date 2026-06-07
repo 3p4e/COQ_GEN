@@ -44,7 +44,7 @@ CREATE TABLE app_config (
 CREATE TABLE controlled_vocabulary (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     domain          TEXT NOT NULL,            -- forbidden_string | gmp_wording | signatory | mandatory_token | numbering
-    doc_class       TEXT,                     -- flower_coq | flower_coa | img_spec | NULL=all
+    doc_class       TEXT,                     -- flower_coq | flower_icoa | flower_spec | NULL=all
     term            TEXT NOT NULL,
     payload         JSONB NOT NULL DEFAULT '{}'::jsonb,
     is_active       BOOLEAN NOT NULL DEFAULT TRUE,
@@ -57,7 +57,7 @@ COMMENT ON TABLE controlled_vocabulary IS
 -- and must NEVER contain the literal "EU GMP" (hard block, audited override only).
 INSERT INTO controlled_vocabulary(domain, doc_class, term, payload) VALUES
   ('forbidden_string','flower_coq','EU GMP','{"action":"block","reason":"owner ruling 2026-06: flower docs are MK GMP","override":"audited"}'),
-  ('forbidden_string','flower_coa','EU GMP','{"action":"block"}'),
+  ('forbidden_string','flower_icoa','EU GMP','{"action":"block"}'),
   ('forbidden_string','flower_spec','EU GMP','{"action":"block"}'),
   ('gmp_wording','flower_coq','MK GMP Certified Facility','{"authority":"MALMED","country":"North Macedonia"}'),
   ('signatory','flower_coq','Prepared & Approved','{"role":"Senior QC Analyst / Head of Laboratory","slot":1}'),
@@ -360,7 +360,7 @@ CREATE UNIQUE INDEX uq_master_confirmed
 -- documents keep the exact version they were rendered with (immutability).
 CREATE TABLE document_template (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    doc_type        TEXT NOT NULL,            -- icoa | coq | coa | spec
+    doc_type        TEXT NOT NULL,            -- icoa (== internal CoA) | coq | spec
     name            TEXT NOT NULL,            -- e.g. CoQ_Template_v02_VariationF
     version         TEXT NOT NULL,
     html            TEXT NOT NULL,            -- uploaded HTML (validated vs token contract)

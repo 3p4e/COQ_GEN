@@ -5,9 +5,8 @@ import { listTemplateVersions, uploadTemplate } from "../api/documents";
 import type { DocumentTemplate, DocType } from "../types/models";
 
 const DOC_TYPES: { id: DocType; label: string; note: string }[] = [
-  { id: "icoa", label: "iCoA", note: "Internal Certificate of Analysis" },
+  { id: "icoa", label: "iCoA", note: "Internal Certificate of Analysis (= CoA)" },
   { id: "coq", label: "CoQ", note: "Certificate of Quality" },
-  { id: "coa", label: "CoA", note: "Generic CoA layout" },
   { id: "spec", label: "Spec", note: "Specification sheet" },
 ];
 

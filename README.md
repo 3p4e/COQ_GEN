@@ -40,6 +40,7 @@ number, writes the Certificate Issuance Register entry, and exports a locked PDF
 | 06 | [docs/06_COQ_GENERATION_ENGINE.md](docs/06_COQ_GENERATION_ENGINE.md) | Templating, GMP compliance guardrails, numbering, register, export |
 | 07 | [docs/07_ROADMAP.md](docs/07_ROADMAP.md) | Phased implementation plan, milestones, staffing, risks |
 | 08 | [docs/08_SECURITY_DATA_INTEGRITY.md](docs/08_SECURITY_DATA_INTEGRITY.md) | GMP Annex 11 / GxP, ALCOA+ data integrity, audit trail, e‑signatures |
+| 09 | [docs/09_SOP_ALIGNMENT.md](docs/09_SOP_ALIGNMENT.md) | Traceability to **QCSOP 010** & **QCSOP 012 v3** — confirmations + corrections |
 
 Foundational, ready‑to‑build artifacts live alongside the docs:
 

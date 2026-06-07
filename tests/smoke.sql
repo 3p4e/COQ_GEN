@@ -43,15 +43,26 @@ INSERT INTO master_parameter(production_batch_id,spec_parameter_id,canonical_key
          120,'CFU/g','pass',(SELECT id FROM institution WHERE lab_code='LT-083'),
          'UKIM-2026-114','2026-05-30',0.98,'confirmed',(SELECT id FROM app_user WHERE username='blagoj'),now();
 
--- ---- T1: transactional monotonic numbering (QCSOP 012 v3) ------------------
+-- ---- T1: transactional monotonic numbering per (cert_type, year) (QCSOP 012 v3) -
 DO $$
 DECLARE v INT; num TEXT;
 BEGIN
-  SELECT last_value INTO v FROM coq_sequence WHERE year=2026 FOR UPDATE;
-  UPDATE coq_sequence SET last_value=last_value+1 WHERE year=2026 RETURNING last_value INTO v;
+  SELECT last_value INTO v FROM cert_sequence WHERE cert_type='CoQ' AND year=2026 FOR UPDATE;
+  UPDATE cert_sequence SET last_value=last_value+1 WHERE cert_type='CoQ' AND year=2026 RETURNING last_value INTO v;
   num := format('CoQ-PP-%s-%s',2026,lpad(v::text,4,'0'));
   IF num <> 'CoQ-PP-2026-0010' THEN RAISE EXCEPTION 'FAIL T1: allocated % expected CoQ-PP-2026-0010',num; END IF;
-  RAISE NOTICE 'PASS T1: allocator produced % (counter now %)',num,v;
+  RAISE NOTICE 'PASS T1: CoQ allocator produced % (counter now %)',num,v;
+END $$;
+
+-- ---- T1b: a SEPARATE per-type sequence (eCoA) is independent of CoQ ---------
+DO $$
+DECLARE v INT; num TEXT;
+BEGIN
+  INSERT INTO cert_sequence(cert_type,year,last_value) VALUES ('eCoA',2026,0) ON CONFLICT DO NOTHING;
+  UPDATE cert_sequence SET last_value=last_value+1 WHERE cert_type='eCoA' AND year=2026 RETURNING last_value INTO v;
+  num := format('eCoA-PP-%s-%s',2026,lpad(v::text,4,'0'));
+  IF num <> 'eCoA-PP-2026-0001' THEN RAISE EXCEPTION 'FAIL T1b: got %',num; END IF;
+  RAISE NOTICE 'PASS T1b: eCoA sequence independent of CoQ -> %',num;
 END $$;
 
 -- ---- T2: source mapping present on every confirmed master line ------------

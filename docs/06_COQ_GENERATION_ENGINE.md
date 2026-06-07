@@ -74,6 +74,13 @@ A deterministic, testable gate that runs **before numbering** and again **after 
    Jovana — Head of QC — "Reviewed").
 7. **Verdict consistency:** overall disposition is consistent with line verdicts (any `fail`
    without an OOS reference + explicit disposition → block).
+8. **Open‑OOS block (QCSOP 012 v3 §6.6):** issuing a CoQ for a batch with an **open OOS** is a
+   reportable **deviation** (QASOP 010). The guard blocks issuance until the OOS is closed; an OOS
+   result must carry the explicit `Out of Specification — [parameter(s)]` statement on the overall
+   conformance line with the failing parameter(s) highlighted.
+9. **Source completeness (QCSOP 012 v3 §6.4):** all required iCoA **and** eCoA results for the
+   batch are present and (for eCoA) in register status `accepted`; conformance for every line was
+   **determined by Purely Plant**, never copied from the eCoA.
 
 Every guard decision (pass/block/override) is an `audit_event`.
 
@@ -84,8 +91,10 @@ final authority:
 
 ```sql
 BEGIN;
-  SELECT last_value FROM coq_sequence WHERE year = :yyyy FOR UPDATE;     -- lock the counter
-  UPDATE coq_sequence SET last_value = last_value + 1 WHERE year = :yyyy;
+  -- per (cert_type, year) counter (QCSOP 012 v3 §6.9.1): each of iCoA/eCoA/CoQ
+  -- has its own strictly-monotonic yearly sequence.
+  SELECT last_value FROM cert_sequence WHERE cert_type='CoQ' AND year = :yyyy FOR UPDATE;
+  UPDATE cert_sequence SET last_value = last_value + 1 WHERE cert_type='CoQ' AND year = :yyyy;
   -- coq_number := format('CoQ-PP-%s-%s', :yyyy, lpad(new_value::text,4,'0'))
   UPDATE coq SET coq_number = :coq_number, status = 'numbered' WHERE id = :coq_id;
   INSERT INTO register_entry (...) VALUES (...);                          -- QCLB 020 / Annex A05
@@ -94,8 +103,10 @@ COMMIT;
 
 Guarantees:
 
-- **Strictly monotonic, zero‑padded, per‑year, resets Jan 1** (seeded: 2025→0032, 2026→0009).
-- **No gaps, no duplicates** even under concurrent issuance (`FOR UPDATE`).
+- **Strictly monotonic, zero‑padded, per certificate type, per year, resets Jan 1**
+  (CoQ seeded: 2025→0032, 2026→0009; iCoA/eCoA have independent counters).
+- **No gaps, no duplicates** even under concurrent issuance (`FOR UPDATE`). Per QCSOP 012 v3 a
+  gap is a **data‑integrity event** to be investigated under ALCOA+.
 - **Atomic**: number allocation + register write happen together or not at all — no orphan numbers.
 
 ## 6.6 Certificate Issuance Register (Annex A05) fields

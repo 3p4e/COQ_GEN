@@ -48,11 +48,16 @@ to certify.
 
 This produces three hard design constraints that recur in every document:
 
-1. **Information completeness (the "EU‑GMP‑compliant" requirement).** The COQ must always carry
-   the full EU‑GMP batch‑release information set (product + batch identity, spec reference and
-   version, every tested parameter with method/limit/result/verdict, sampling and analysis
-   dates, the testing institutions and their credentials, overall disposition, and the dual QC
-   sign‑off). See [06 §6.3](06_COQ_GENERATION_ENGINE.md).
+1. **Information completeness.** Per **QCSOP 012 v3**, the CoQ is a **QC‑internal aggregation**
+   of all internal (**iCoA**) and external (**eCoA**) results for a batch against its approved
+   specification — it is **not itself an EU‑GMP Annex 16 batch‑release certificate**; it is **one
+   input** to the Qualified Person's separate release decision. "Complete" therefore means the CoQ
+   carries everything the QP needs to evaluate conformance: product + batch identity, spec
+   reference and version, every spec parameter with method/limit/result/verdict, the **testing
+   laboratory (internal/external) and the source certificate reference + date** for each line,
+   sampling/analysis dates, overall disposition (with explicit OOS statement if any), and the dual
+   QC sign‑off. See [06 §6.3](06_COQ_GENERATION_ENGINE.md) and the SOP trace in
+   [09](09_SOP_ALIGNMENT.md).
 2. **Wording guardrail (the "never print EU GMP" rule).** Flower CoQ/CoA/Spec documents print
    **"MK GMP Certified Facility" (MALMED)** and must **never** contain the literal string
    `EU GMP`. The engine scans rendered output and *blocks* release if the forbidden string

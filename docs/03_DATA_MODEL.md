@@ -165,8 +165,11 @@ for human selection, never auto‑resolved silently.
 - `coq_line` — a **snapshot copy** of each `master_parameter` at issue time (value, unit, verdict,
   limit, method, **source document code + date**, institution). Snapshotting (not FK‑only) means a
   reissued spec or a superseded master row can never silently change what a *signed* COQ says.
-- `register_entry` — the QCLB 020 / Annex A05 row (see [06 §6.6]), 1:1 with `coq`.
-- `coq_sequence` — the per‑year monotonic counter (`year`, `last_value`), updated under
+- `register_entry` — the QCLB 020 / Annex A05 row (see [06 §6.6]). Per **QCSOP 012 v3** it
+  tracks **all** certificate types (iCoA, eCoA, CoQ): one row per CoQ *and* one per source
+  certificate on receipt; `coq_id` xor `ecoa_document_id` identifies the subject.
+- `cert_sequence` — the per‑`(cert_type, year)` monotonic counter (`cert_type`, `year`,
+  `last_value`), updated under
   `SELECT … FOR UPDATE` inside the issuing transaction → guaranteed no gaps/dupes (QCSOP 012 v3).
 - `signature` — the e‑signature ledger: who, role, meaning ("Prepared & Approved" / "Reviewed"),
   timestamp, method, and the `record_sha256` the signature is bound to (Annex 11 §14).

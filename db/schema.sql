@@ -69,12 +69,16 @@ CREATE TABLE cultivation_batch (
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Master Specification Register (QCSOP 010 §6.10): one row per spec version.
+-- Coding (QCSOP 010 §6.6, via QAWI 002): QCSP-[CAT]-[NNN] v.[VV].
 CREATE TABLE product_spec (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     spec_code           TEXT NOT NULL,            -- QCSP-IMB-001
-    version             TEXT NOT NULL,            -- v02
-    category            TEXT NOT NULL,            -- IMG | IPM | FP | IMB
+    version             TEXT NOT NULL,            -- v.01
+    category            TEXT NOT NULL,            -- IMG | IPM | FP | IMB  (QCSOP 010 §6.6)
     title               TEXT NOT NULL,
+    strain              TEXT,                     -- QCSOP 010 §6.6: each strain gets its own spec number
+    status              TEXT NOT NULL DEFAULT 'active', -- active | superseded | withdrawn
     is_active           BOOLEAN NOT NULL DEFAULT TRUE,
     effective_from      DATE,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -160,6 +164,24 @@ CREATE TABLE spec_parameter (
     UNIQUE (product_spec_id, param_name)
 );
 
+-- THC-dominant grade tiers per spec (e.g. QCSP-IMB-001: Grades I-V, THC27..THC9).
+-- The COQ states the batch grade + its THC acceptance range; the assay verdict for
+-- the THC parameter is evaluated against the selected grade's [thc_low, thc_high].
+CREATE TABLE spec_grade (
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_spec_id     UUID NOT NULL REFERENCES product_spec(id) ON DELETE CASCADE,
+    grade               TEXT NOT NULL,        -- 'I' .. 'V'
+    designation         TEXT,                 -- THC27
+    product_code        TEXT,                 -- PP-sFP-THC27:CBD1
+    thc_target          NUMERIC,              -- 27.0 (% w/w)
+    thc_tolerance       TEXT,                 -- ±2%
+    thc_low             NUMERIC,              -- 25.0
+    thc_high            NUMERIC,              -- 28.9
+    cbd_max             NUMERIC,              -- 1.0 (% w/w)
+    display_order       INTEGER,
+    UNIQUE (product_spec_id, grade)
+);
+
 -- ---------------------------------------------------------------------------
 -- 3. Source files + eCOA documents + extracted parameters + chunks
 -- ---------------------------------------------------------------------------
@@ -177,11 +199,17 @@ CREATE TABLE source_file (
     uploaded_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Source certificate (QCSOP 012 v3): holds BOTH internal CoAs (iCoA) and external
+-- CoAs (eCoA). The CoQ aggregates iCoA + eCoA results for a batch. (Table name kept
+-- as ecoa_document for continuity; implementation may rename to source_certificate.)
 CREATE TABLE ecoa_document (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    document_code           TEXT NOT NULL,                  -- lab report no. or eCoA-PP-YYYY-NNNN
+    document_code           TEXT NOT NULL,                  -- lab report no., eCoA-PP-YYYY-NNNN, or iCoA-PP-YYYY-NNNN
+    cert_type               TEXT NOT NULL DEFAULT 'eCoA',   -- iCoA | eCoA  (QCSOP 012 v3)
+    origin                  TEXT NOT NULL DEFAULT 'external',-- internal | external
+    register_status         TEXT NOT NULL DEFAULT 'pending_review', -- pending_review | accepted | rejected | voided (QCSOP 012 §6.3.2)
     source_file_id          UUID NOT NULL REFERENCES source_file(id),
-    institution_id          UUID REFERENCES institution(id),
+    institution_id          UUID REFERENCES institution(id),-- NULL for internal iCoA (Purely Plant QC lab)
     production_batch_id      UUID REFERENCES production_batch(id),
     -- denormalised, indexed lookup keys (the brief's required indexes)
     batch_number            TEXT,
@@ -304,14 +332,21 @@ CREATE TABLE coq_template (
     UNIQUE (name, version)
 );
 
--- per-year monotonic counter (QCSOP 012 v3) - allocated under SELECT ... FOR UPDATE
-CREATE TABLE coq_sequence (
-    year            INTEGER PRIMARY KEY,
-    last_value      INTEGER NOT NULL DEFAULT 0
+-- Per-(certificate type, year) strictly-monotonic counter (QCSOP 012 v3 §6.9.1):
+-- "next sequential number for EACH certificate type within EACH calendar year ...
+-- no numbers skipped, reused, or reassigned; gaps are ALCOA+ data-integrity events."
+-- Allocated under SELECT ... FOR UPDATE inside the issuing transaction.
+-- cert_type: iCoA (internal CoA) | eCoA (external CoA) | CoQ (aggregation).
+CREATE TABLE cert_sequence (
+    cert_type       TEXT NOT NULL,            -- iCoA | eCoA | CoQ
+    year            INTEGER NOT NULL,
+    last_value      INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (cert_type, year)
 );
--- seed from known register state
-INSERT INTO coq_sequence(year, last_value) VALUES (2025, 32), (2026, 9)
-    ON CONFLICT (year) DO NOTHING;
+-- seed CoQ counters from the known register state (2025 -> 0032, 2026 -> 0009);
+-- iCoA/eCoA counters are created on first use per year.
+INSERT INTO cert_sequence(cert_type, year, last_value) VALUES ('CoQ',2025,32),('CoQ',2026,9)
+    ON CONFLICT (cert_type, year) DO NOTHING;
 
 CREATE TABLE coq (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -352,31 +387,37 @@ CREATE TABLE coq_line (
 );
 CREATE INDEX idx_coqline_coq ON coq_line(coq_id);
 
--- Certificate Issuance Register (QCLB 020 / Annex A05), 1:1 with coq
+-- Certificate Issuance Register (QCSOP 012 v3 §6.9 / QCLB 020 / Annex A05).
+-- Generalised to ALL certificate types (iCoA, eCoA, CoQ). Each row references
+-- either a CoQ or a source certificate (iCoA/eCoA). Numbering is monotonic
+-- per (cert_type, year) -> the unique constraint enforces no gaps/dupes per type.
 CREATE TABLE register_entry (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    coq_id              UUID NOT NULL UNIQUE REFERENCES coq(id),
+    cert_type           TEXT NOT NULL DEFAULT 'CoQ',  -- iCoA | eCoA | CoQ
+    coq_id              UUID REFERENCES coq(id),                 -- set when cert_type=CoQ
+    ecoa_document_id    UUID REFERENCES ecoa_document(id),       -- set when cert_type=iCoA/eCoA
     entry_no            INTEGER NOT NULL,
-    cert_type           TEXT NOT NULL DEFAULT 'CoQ',
     seq_no              INTEGER NOT NULL,
     year                INTEGER NOT NULL,
     certificate_number  TEXT NOT NULL,
     issuing_lab         TEXT NOT NULL DEFAULT 'Purely Plant QC',
     sample_id           TEXT,
-    batch_no            TEXT NOT NULL,
-    product_name        TEXT NOT NULL,
-    spec_ref            TEXT NOT NULL,
+    batch_no            TEXT,
+    product_name        TEXT,
+    spec_ref            TEXT,
     sampling_date       DATE,
     analysis_date       DATE,
     issue_date          DATE NOT NULL,
-    prepared_by         TEXT NOT NULL,           -- Senior QC Analyst / Blagoj Nikolov
-    reviewed_by         TEXT NOT NULL,           -- Head of QC / Jovana
-    status              TEXT NOT NULL,
+    prepared_by         TEXT,                    -- CoQ: Senior QC Analyst / Head of Laboratory
+    reviewed_by         TEXT,                    -- CoQ: Head of QC ("Reviewed and Approved")
+    status              TEXT NOT NULL,           -- pending_review | accepted | active | superseded | voided
     oos_ref             TEXT,
     archive_ref         TEXT,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (year, seq_no)                         -- uq_register_seq_per_year
+    CONSTRAINT register_subject_ck CHECK (coq_id IS NOT NULL OR ecoa_document_id IS NOT NULL),
+    UNIQUE (cert_type, year, seq_no)             -- monotonic per type per year (QCSOP 012 v3 §6.9.1)
 );
+CREATE UNIQUE INDEX uq_register_coq ON register_entry(coq_id) WHERE coq_id IS NOT NULL;
 
 -- e-signature ledger (Annex 11 §14), exactly 2 / no QP enforced at app layer
 CREATE TABLE signature (

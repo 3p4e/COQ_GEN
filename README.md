@@ -48,6 +48,13 @@ Foundational, ready‑to‑build artifacts live alongside the docs:
 | [db/schema.sql](db/schema.sql) | PostgreSQL DDL for the full data model (batches, lineage, eCOA, parameters, COQ, register, audit) |
 | [api/gateway_openapi.yaml](api/gateway_openapi.yaml) | OpenAPI contract for the FastAPI agent gateway on KVM4 |
 | [templates/coq/README.md](templates/coq/README.md) | HTML template contract + mandatory release‑information token set |
+| [tests/](tests/) | Executable harness — `bash tests/run.sh` applies the schema, runs data‑layer smoke checks, validates the OpenAPI. **All green.** |
+
+> **Verified, not just designed.** `db/schema.sql` applies cleanly to PostgreSQL 16 + pgvector
+> (23 tables); the numbering allocator, source‑mapping, cross‑lingual synonym resolution, the
+> single‑source‑of‑truth release guard, and the audit hash‑chain all pass automated checks; the
+> OpenAPI contract validates as 3.1; and the **live KVM4 agents** were smoke‑tested end‑to‑end
+> (classify → extract → cross‑lingual spec‑match, with live RAAG memory). See [tests/README.md](tests/README.md).
 
 ## 3. Proposed repository structure (target state)
 

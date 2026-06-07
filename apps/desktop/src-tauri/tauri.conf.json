@@ -1,0 +1,22 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "COQ_GEN",
+  "version": "0.1.0",
+  "identifier": "com.purelyplant.coqgen",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      { "title": "COQ_GEN", "width": 1280, "height": 840, "resizable": true }
+    ],
+    "security": { "csp": "default-src 'self'; connect-src 'self' http://127.0.0.1:8765" }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all"
+  }
+}

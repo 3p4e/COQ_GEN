@@ -94,18 +94,30 @@ those stay sourced from the database + compliance guard. Concretely:
 **Reject / rewrite:** EU-GMP wording & badge, the numbering scheme, fictional labs, the
 `React.createElement` prototype code (rebuild as TSX), unverified authorisation numbers.
 
-## 10.5 The one blocking decision — brand identity
+## 10.5 Brand identity — RESOLVED (owner ruling)
 
-There are now **two** candidate visual identities, both owner-associated:
-- **"Variation F" — Navy `#1B3A5C` & Gold `#A67C2E`** — the *locked* regulated-document design
-  system maintained by the KVM4 `VariationF` agent (and the `coa_track` template family).
-- **PhytoCert — Forest green `#2D8F63`** & slate — the new, complete, polished system delivered here.
+Two candidate identities existed: PhytoCert **forest green `#2D8F63`** vs the locked **"Variation F"
+Navy `#1B3A5C` & Gold `#A67C2E`** system (KVM4 `VariationF` agent + `coa_track` templates).
 
-The application chrome and the rendered certificate (CoQ) should share one identity. This is a
-business/brand call, not a technical one — raised with you separately. Everything else in the
-adoption plan is independent of this choice (tokens are swappable).
+**Owner ruling (confirmed): Variation F (Navy & Gold) EVERYWHERE** — both the application chrome and
+the rendered regulated documents (CoQ/CoA/Spec). Therefore:
 
-## 10.6 Integration roadmap (slots into docs/07)
+- We adopt PhytoCert's **design-system architecture, component set, typography discipline, UX flows,
+  and view structure**, but **re-skin the token palette to Navy & Gold** (Variation F). Forest green
+  is retired.
+- The `tokens/colors.css` we port will carry the Variation F palette (navy/navy-deep/navy-mid/
+  gold/gold-bright/gold-tint, status green/amber/red, zebra surfaces) rather than PhytoCert green.
+- PhytoCert's `badge-eu-gmp.svg` is dropped (per the MK-GMP ruling, docs/09 §9.4); certificate
+  identity follows Variation F as kept by the `VariationF` agent.
+- IBM Plex Sans/Mono/Serif typography, Lucide icons, status semantics, copywriting rules, density,
+  and the three-zone shell are adopted unchanged (they're brand-neutral craft).
+
+## 10.6 Status
+
+Analysis complete; **UI porting is paused per owner direction** ("just the analysis for now"). When
+resumed, execute the §10.7 roadmap below with the Variation F palette.
+
+## 10.7 Integration roadmap (slots into docs/07)
 
 1. **Phase 1.5 — UI foundation:** vendor the chosen token set + port the component library + the
    `AppShell` (sidebar/header/nav) as TSX in `apps/desktop`; keep the Tauri shell + sidecar spawn.
@@ -118,7 +130,7 @@ adoption plan is independent of this choice (tokens are swappable).
    (MK-GMP, gaps, open-OOS) → transactional numbering → dual e-sign → PDF/A export.
 6. **OOS/NCR view** → the open-OOS deviation workflow that blocks CoQ issuance.
 
-## 10.7 Provenance note
+## 10.8 Provenance note
 
 PhytoCert source lives in the owner's Google Drive (not vendored wholesale here to avoid importing
 the green-branded, non-SOP assets before the §10.5 brand decision). Files are pulled per-view as we

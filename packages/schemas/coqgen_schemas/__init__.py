@@ -60,3 +60,137 @@ class IngestAccepted(BaseModel):
     received: int
     document_codes: list[str] = []
     note: str = "Phase 0 stub: OCR/parse/embed + agent extraction land in Phase 1-2."
+
+
+# ---------------------------------------------------------------------------
+# Planned-endpoint contracts (Phase 1.5 view bindings, docs/11 §7).
+# These are the typed shapes the UI (Design agent) binds to. Backend endpoints
+# return them as real reads (empty lists until data exists). Verdict/status
+# string unions are documented inline rather than enums to keep TS codegen flat.
+# ---------------------------------------------------------------------------
+
+class DocumentRef(BaseModel):
+    """A source certificate (iCoA/eCoA) in feeds and ingestion lists."""
+    document_code: str
+    cert_type: str = "eCoA"            # iCoA | eCoA
+    doc_type: str = "cannabis_coa"     # cannabis_coa | water_quality | other
+    institution_name: str | None = None
+    lab_code: str | None = None
+    batch_number: str | None = None
+    issue_date: date | None = None
+    register_status: str | None = None  # pending_review | accepted | rejected | voided
+    extraction_confidence: float | None = None
+
+
+class BatchSummary(BaseModel):
+    production_batch_number: str
+    packaging_batch_number: str | None = None
+    product_name: str
+    dominance: str | None = None        # THC | CBD (classification, not strain)
+    grade: str | None = None            # I..V
+    grade_designation: str | None = None
+    spec_reference: str | None = None
+    status: str
+    params_total: int = 0
+    params_conforming: int = 0
+    params_pending: int = 0
+
+
+class LineageRef(BaseModel):
+    cultivation_batch_number: str | None = None
+    production_batch_number: str
+    packaging_batch_numbers: list[str] = []
+
+
+class Batch(BaseModel):
+    production_batch_number: str
+    product_name: str
+    strain: str | None = None           # DESCRIPTIVE only — never a spec selector
+    dominance: str | None = None
+    grade: str | None = None
+    grade_designation: str | None = None
+    spec_code: str | None = None
+    spec_version: str | None = None
+    spec_reference: str | None = None
+    status: str
+    production_date: date | None = None
+    quantity_kg: float | None = None
+    lineage: LineageRef
+
+
+class MasterParameterLine(BaseModel):
+    """Single source-of-truth parameter row for the Batch Record + COQ lines."""
+    canonical_key: str | None = None
+    param_name: str
+    method: str | None = None
+    acceptance_text: str | None = None
+    result_display: str | None = None
+    unit: str | None = None
+    verdict: str = "pending"            # pass | fail | pending | not_tested
+    source_institution_name: str | None = None
+    source_lab_code: str | None = None
+    source_document_code: str | None = None   # maps back to the source eCoA/iCoA
+    source_document_date: date | None = None
+    confidence: float | None = None
+    status: str = "draft"              # draft | confirmed | superseded
+
+
+class RegisterEntry(BaseModel):
+    """Certificate Issuance Register row (iCoA/eCoA/CoQ) — QCSOP 012 v3."""
+    cert_type: str                      # iCoA | eCoA | CoQ
+    certificate_number: str
+    seq_no: int | None = None
+    year: int | None = None
+    batch_no: str | None = None
+    product_name: str | None = None
+    spec_ref: str | None = None
+    issue_date: date | None = None
+    prepared_by: str | None = None
+    reviewed_by: str | None = None
+    status: str
+    oos_ref: str | None = None
+    archive_ref: str | None = None
+
+
+class OOSItem(BaseModel):
+    """An out-of-specification result blocking CoQ issuance (OOS/NCR view)."""
+    batch_no: str | None = None
+    canonical_key: str | None = None
+    param_name: str
+    result_display: str | None = None
+    acceptance_text: str | None = None
+    source_document_code: str | None = None
+    status: str = "open"              # open | under_investigation | closed
+
+
+class CoqTemplate(BaseModel):
+    name: str
+    version: str
+    doc_class: str = "flower_coq"
+    render_engine: str = "weasyprint"   # weasyprint | playwright
+    is_active: bool = True
+
+
+class LabInstitution(BaseModel):
+    lab_code: str | None = None
+    name: str
+    address: str | None = None
+    credentials: str | None = None
+    default_language: str | None = None
+
+
+class ParameterDictionaryEntry(BaseModel):
+    canonical_key: str
+    display_name: str
+    category: str
+    canonical_unit: str | None = None
+    default_method_family: str | None = None
+
+
+class DashboardSummary(BaseModel):
+    batches_in_testing: int = 0
+    ecoa_pending_review: int = 0
+    coqs_issued_this_year: int = 0
+    open_oos: int = 0
+    recent_documents: list[DocumentRef] = []
+    recent_batches: list[BatchSummary] = []

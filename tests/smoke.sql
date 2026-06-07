@@ -110,4 +110,20 @@ BEGIN
   RAISE NOTICE 'PASS T5: audit hash chain verifies (tamper-evident)';
 END $$;
 
+-- ---- T6: compliance guard - forbidden "EU GMP" on flower docs (owner ruling) -
+DO $$
+DECLARE bad TEXT := 'Purely Plant DOOEL ... EU GMP Certified Facility ... Page 1'; -- mimics the real spec footer
+        good TEXT := 'Purely Plant DOOEL ... MK GMP Certified Facility (MALMED) ... Page 1';
+        hits INT;
+BEGIN
+  SELECT count(*) INTO hits FROM controlled_vocabulary
+   WHERE domain='forbidden_string' AND doc_class='flower_coq' AND is_active AND bad ILIKE '%'||term||'%';
+  IF hits = 0 THEN RAISE EXCEPTION 'FAIL T6: guard did not catch "EU GMP" on a flower document'; END IF;
+
+  SELECT count(*) INTO hits FROM controlled_vocabulary
+   WHERE domain='forbidden_string' AND doc_class='flower_coq' AND is_active AND good ILIKE '%'||term||'%';
+  IF hits <> 0 THEN RAISE EXCEPTION 'FAIL T6: guard falsely flagged compliant MK GMP wording'; END IF;
+  RAISE NOTICE 'PASS T6: guard BLOCKS "EU GMP" and PASSES "MK GMP Certified Facility" on flower docs';
+END $$;
+
 \echo '---- ALL SMOKE CHECKS PASSED ----'

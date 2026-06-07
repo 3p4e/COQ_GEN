@@ -53,6 +53,17 @@ CREATE TABLE controlled_vocabulary (
 COMMENT ON TABLE controlled_vocabulary IS
   'e.g. (forbidden_string, flower_coq, "EU GMP"); (gmp_wording, flower_coq, "MK GMP Certified Facility")';
 
+-- Owner ruling (confirmed): flower CoQ/CoA/Spec must print "MK GMP Certified Facility"
+-- and must NEVER contain the literal "EU GMP" (hard block, audited override only).
+INSERT INTO controlled_vocabulary(domain, doc_class, term, payload) VALUES
+  ('forbidden_string','flower_coq','EU GMP','{"action":"block","reason":"owner ruling 2026-06: flower docs are MK GMP","override":"audited"}'),
+  ('forbidden_string','flower_coa','EU GMP','{"action":"block"}'),
+  ('forbidden_string','flower_spec','EU GMP','{"action":"block"}'),
+  ('gmp_wording','flower_coq','MK GMP Certified Facility','{"authority":"MALMED","country":"North Macedonia"}'),
+  ('signatory','flower_coq','Prepared & Approved','{"role":"Senior QC Analyst / Head of Laboratory","slot":1}'),
+  ('signatory','flower_coq','Reviewed & Approved','{"role":"Head of QC","slot":2,"qualified_person":false}')
+ON CONFLICT DO NOTHING;
+
 -- ---------------------------------------------------------------------------
 -- 1. Lineage: cultivation -> production -> packaging
 -- ---------------------------------------------------------------------------

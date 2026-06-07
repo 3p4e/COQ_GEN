@@ -57,17 +57,21 @@ graph TB
     coqR --> qp["Input to QP batch release<br/>(separate Annex 16 procedure)"]
 ```
 
-## 9.4 The EU‑GMP vs MK‑GMP wording — still an owner decision
+## 9.4 The EU‑GMP vs MK‑GMP wording — RESOLVED (owner ruling)
 
 The supplied **product specifications** (QCSP‑IMB‑001 v.01, QCSP‑FP‑001 v.01, both 26 May 2026)
 print **"EU GMP Certified Facility"** in the footer (manufacturer *Purely Plant DOOEL, Petrovec,
 N. Macedonia*). The `VariationF` agent's locked rule (set 5 Jun 2026, i.e. *after* these specs)
 says flower CoQ/CoA/**Spec** must print **"MK GMP Certified Facility"** and **flag any "EU GMP"
-string for owner confirmation**. Neither SOP supplied here fixes the facility‑attestation wording.
+string for owner confirmation**.
 
-This is therefore a genuine owner decision (see the question raised in chat). Until resolved, the
-Compliance Guard treats `EU GMP` on a flower document as a **flag**, configured in
-`controlled_vocabulary`, so the policy can be flipped by configuration rather than code.
+**Owner ruling (confirmed): "MK GMP" is authoritative.** Flower CoQ/CoA/Spec documents must print
+**"MK GMP Certified Facility" (MALMED, North Macedonia)** and the Compliance Guard **hard‑blocks**
+the literal string `EU GMP` on flower documents (audited owner override only). The two uploaded
+specs' footers are treated as the error this rule corrects and should be re‑issued under change
+control. This ruling is encoded as data in `controlled_vocabulary`
+(`forbidden_string`/`gmp_wording` rows seeded in `db/schema.sql`) and verified by smoke test **T6**,
+so the policy is enforced by configuration, not code.
 
 ## 9.5 Open items to confirm with QC
 

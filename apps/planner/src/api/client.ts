@@ -71,6 +71,17 @@ export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
   );
 }
 
+export async function apiPut<T>(path: string, body: unknown): Promise<T> {
+  return handle<T>(
+    await fetch(`${BASE}${path}`, {
+      method: "PUT",
+      headers: { ...authHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+    path,
+  );
+}
+
 export async function apiDelete(path: string): Promise<void> {
   await handle<void>(await fetch(`${BASE}${path}`, { method: "DELETE", headers: authHeaders() }), path);
 }

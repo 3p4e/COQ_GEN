@@ -1,11 +1,16 @@
 /* Typed wrappers over the planner endpoints. */
-import { apiDelete, apiGet, apiPatch, apiPost, setToken } from "./client";
+import { apiDelete, apiGet, apiPatch, apiPost, apiPut, setToken } from "./client";
 import type {
+  AiDraftResult,
   PlannerDepartment,
   PlannerTask,
   PlannerTaskCreate,
   PlannerTaskUpdate,
   PlannerTelemetry,
+  PlannerWeeklyReport,
+  PlannerWeeklyReportUpdate,
+  RewriteResult,
+  RolloverResult,
   Token,
   UserOut,
 } from "../types/models";
@@ -51,3 +56,17 @@ export const addHandoff = (id: string, toDepartmentId: string): Promise<PlannerT
 /* ── Telemetry ────────────────────────────────────────────────────────────*/
 export const getTelemetry = (weekStart: string): Promise<PlannerTelemetry> =>
   apiGet<PlannerTelemetry>(`/planner/telemetry?week_start=${weekStart}`);
+
+/* ── Weekly reports + AI ──────────────────────────────────────────────────*/
+export const getReport = (weekStart: string): Promise<PlannerWeeklyReport> =>
+  apiGet<PlannerWeeklyReport>(`/planner/reports?week_start=${weekStart}`);
+export const saveReport = (weekStart: string, body: PlannerWeeklyReportUpdate): Promise<PlannerWeeklyReport> =>
+  apiPut<PlannerWeeklyReport>(`/planner/reports?week_start=${weekStart}`, body);
+export const submitReport = (weekStart: string, body: PlannerWeeklyReportUpdate): Promise<PlannerWeeklyReport> =>
+  apiPost<PlannerWeeklyReport>(`/planner/reports/submit?week_start=${weekStart}`, body);
+export const aiDraftReport = (weekStart: string): Promise<AiDraftResult> =>
+  apiPost<AiDraftResult>(`/planner/reports/ai-draft?week_start=${weekStart}`);
+export const rolloverWeek = (weekStart: string): Promise<RolloverResult> =>
+  apiPost<RolloverResult>(`/planner/reports/rollover?week_start=${weekStart}`);
+export const aiRewrite = (text: string, tone = "concise"): Promise<RewriteResult> =>
+  apiPost<RewriteResult>("/planner/ai/rewrite", { text, tone });

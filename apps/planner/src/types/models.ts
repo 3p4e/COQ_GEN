@@ -117,3 +117,43 @@ export interface PlannerTelemetry {
   by_status: Record<string, number>;
   busiest_day?: string | null;
 }
+
+export interface PlannerWeeklyReport {
+  id: string;
+  user_id: string;
+  user_name?: string | null;
+  week_start: string;
+  completed_summary?: string | null;
+  progress_summary?: string | null;
+  next_week_plan?: string | null;
+  status: "draft" | "submitted";
+  ai_generated: boolean;
+  submitted_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface PlannerWeeklyReportUpdate {
+  completed_summary?: string | null;
+  progress_summary?: string | null;
+  next_week_plan?: string | null;
+}
+
+export interface AiDraftResult {
+  available: boolean;
+  completed_summary?: string | null;
+  progress_summary?: string | null;
+  next_week_plan?: string | null;
+  note?: string | null;
+}
+
+export interface RewriteResult {
+  available: boolean;
+  text: string;
+  note?: string | null;
+}
+
+export interface RolloverResult {
+  created: number;
+  target_week: string;
+}

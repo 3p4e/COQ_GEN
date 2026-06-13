@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from "react";
-import { X } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 import { Button, Input, Select, Textarea, Field } from "../components";
-import { createTask, deleteTask, updateTask } from "../api/planner";
+import { aiRewrite, createTask, deleteTask, updateTask } from "../api/planner";
 import { DAYS, dayLabel } from "../i18n";
 import type {
   Lang, PlannerDepartment, PlannerTask, TaskPriority, TaskStatus, UserOut,
@@ -37,8 +37,25 @@ export function AddTaskModal({
   const [blocker, setBlocker] = useState(task?.blocker ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rewriting, setRewriting] = useState(false);
+  const [aiNote, setAiNote] = useState<string | null>(null);
 
   const deptName = (d: PlannerDepartment) => (lang === "mk" ? d.name_mk : d.name_en);
+
+  async function rewriteDescription() {
+    if (!description.trim()) return;
+    setRewriting(true);
+    setAiNote(null);
+    try {
+      const r = await aiRewrite(description);
+      if (r.available) setDescription(r.text);
+      else setAiNote(r.note ?? t("ai_unavailable"));
+    } catch {
+      setAiNote(t("ai_unavailable"));
+    } finally {
+      setRewriting(false);
+    }
+  }
 
   function toggleDay(d: string) {
     setDays((cur) => (cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d]));
@@ -124,7 +141,16 @@ export function AddTaskModal({
             <Input label={t("batch")} value={batch} onChange={setBatch} />
           </div>
           <Input label="Tags (comma-separated)" value={tags} onChange={setTags} />
-          <Textarea label={t("description")} value={description} onChange={setDescription} rows={3} />
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-tertiary)", letterSpacing: "0.04em", textTransform: "uppercase" }}>{t("description")}</span>
+              <Button variant="ghost" size="sm" icon={<Sparkles size={13} />} onClick={rewriteDescription} disabled={rewriting || !description.trim()}>
+                {rewriting ? t("drafting") : t("rewrite")}
+              </Button>
+            </div>
+            <Textarea value={description} onChange={setDescription} rows={3} />
+            {aiNote && <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 4 }}>{aiNote}</div>}
+          </div>
           {status === "stuck" && <Input label={t("blocked")} value={blocker} onChange={setBlocker} />}
           {error && <div style={errBox}>{error}</div>}
         </div>

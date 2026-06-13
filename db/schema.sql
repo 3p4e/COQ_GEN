@@ -592,3 +592,32 @@ CREATE TABLE planner_handoff (
     created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_planner_handoff_task ON planner_handoff(task_id);
+
+-- Weekly reports (one per user per week) — completed + progress + next-week plan.
+-- May be AI-drafted (ai_generated); a human reviews before status -> submitted.
+CREATE TABLE planner_weekly_report (
+    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id           UUID NOT NULL REFERENCES app_user(id),
+    week_start        DATE NOT NULL,
+    completed_summary TEXT,
+    progress_summary  TEXT,
+    next_week_plan    TEXT,
+    status            TEXT NOT NULL DEFAULT 'draft',   -- draft|submitted
+    ai_generated      BOOLEAN NOT NULL DEFAULT FALSE,
+    submitted_at      TIMESTAMPTZ,
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (user_id, week_start)
+);
+CREATE INDEX idx_planner_report_week ON planner_weekly_report(week_start);
+
+-- Report embeddings for the executive RAG (PR-C). Mirrors ecoa_chunk: 1536-d, HNSW.
+CREATE TABLE planner_report_embedding (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    report_id   UUID NOT NULL REFERENCES planner_weekly_report(id) ON DELETE CASCADE,
+    chunk_text  TEXT NOT NULL,
+    embedding   vector(1536),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_planner_report_embed ON planner_report_embedding
+    USING hnsw (embedding vector_cosine_ops);

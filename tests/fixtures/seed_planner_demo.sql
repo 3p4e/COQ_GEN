@@ -125,4 +125,18 @@ WHERE t.title = 'Trim & wet-weigh — Batch GG4-2401'
   AND t.week_start = date_trunc('week', current_date)::date
   AND NOT EXISTS (SELECT 1 FROM planner_handoff h WHERE h.task_id = t.id);
 
+-- ── A couple of submitted weekly reports (current week) ───────────────────
+INSERT INTO planner_weekly_report(user_id, week_start, completed_summary, progress_summary, next_week_plan, status, submitted_at)
+SELECT (SELECT id FROM app_user WHERE username = v.username),
+       date_trunc('week', current_date)::date, v.completed, v.progress, v.next_plan, 'submitted', now()
+FROM (VALUES
+  ('marko',   'Cut 240 GG4 clones; began 11L up-pot in Veg 2.',
+              'Up-pot ~60% done; substrate staged.',
+              'Finish up-pot, flip Flower 3 to 12/12, update plant map.'),
+  ('elena',   'Pulled 4-zone GG4 samples; plated microbials.',
+              'HPLC potency blocked on reagent (procurement notified).',
+              'Run HPLC once reagent lands; release GG4 micro results.')
+) AS v(username, completed, progress, next_plan)
+ON CONFLICT (user_id, week_start) DO NOTHING;
+
 COMMIT;

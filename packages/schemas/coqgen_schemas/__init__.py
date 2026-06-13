@@ -398,3 +398,51 @@ class PlannerTelemetry(BaseModel):
     completion: int = 0                 # percent done
     by_status: dict[str, int] = {}      # status -> count
     busiest_day: str | None = None
+
+
+# --- Weekly reports + AI (PR-B) --------------------------------------------
+class PlannerWeeklyReport(BaseModel):
+    id: str
+    user_id: str
+    user_name: str | None = None
+    week_start: date
+    completed_summary: str | None = None
+    progress_summary: str | None = None
+    next_week_plan: str | None = None
+    status: str = "draft"               # draft|submitted
+    ai_generated: bool = False
+    submitted_at: datetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class PlannerWeeklyReportUpdate(BaseModel):
+    completed_summary: str | None = None
+    progress_summary: str | None = None
+    next_week_plan: str | None = None
+
+
+class AiDraftResult(BaseModel):
+    """AI-drafted report sections. available=False ⇒ gateway unconfigured/unreachable
+    (graceful degradation); the planner stays usable and the user writes manually."""
+    available: bool = True
+    completed_summary: str | None = None
+    progress_summary: str | None = None
+    next_week_plan: str | None = None
+    note: str | None = None             # human-readable status when unavailable
+
+
+class RewriteRequest(BaseModel):
+    text: str
+    tone: str = "concise"               # concise|formal|friendly
+
+
+class RewriteResult(BaseModel):
+    available: bool = True
+    text: str
+    note: str | None = None
+
+
+class RolloverResult(BaseModel):
+    created: int = 0
+    target_week: date

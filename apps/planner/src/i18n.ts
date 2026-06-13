@@ -71,6 +71,19 @@ const EN: Dict = {
   ai_unavailable: "AI unavailable — gateway not configured. Write it manually.",
   report_submitted_note: "This report was submitted and is read-only.",
   drafting: "Drafting…",
+  exec_overview: "Organisation overview",
+  headcount: "People",
+  reports_in: "Reports in",
+  by_department: "By department",
+  by_person: "By person",
+  ai_analysis: "AI analysis",
+  run_analysis: "Run AI analysis",
+  analyzing: "Analysing…",
+  highlights: "Highlights",
+  risks: "Risks",
+  foresight: "Foresight",
+  sources: "Sources",
+  no_insight_yet: "Run the analysis to generate an executive summary across all submitted reports.",
 };
 
 const MK: Dict = {
@@ -141,6 +154,19 @@ const MK: Dict = {
   ai_unavailable: "АИ е недостапно — порталот не е конфигуриран. Напишете рачно.",
   report_submitted_note: "Овој извештај е поднесен и е само за читање.",
   drafting: "Изготвување…",
+  exec_overview: "Преглед на организацијата",
+  headcount: "Луѓе",
+  reports_in: "Извештаи",
+  by_department: "По оддел",
+  by_person: "По лице",
+  ai_analysis: "АИ анализа",
+  run_analysis: "Изврши АИ анализа",
+  analyzing: "Анализирање…",
+  highlights: "Истакнато",
+  risks: "Ризици",
+  foresight: "Предвидување",
+  sources: "Извори",
+  no_insight_yet: "Извршете анализа за извршно резиме од сите поднесени извештаи.",
 };
 
 const DICTS: Record<Lang, Dict> = { en: EN, mk: MK };

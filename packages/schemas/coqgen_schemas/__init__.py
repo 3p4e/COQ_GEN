@@ -446,3 +446,48 @@ class RewriteResult(BaseModel):
 class RolloverResult(BaseModel):
     created: int = 0
     target_week: date
+
+
+# --- Executive analytics (PR-C) --------------------------------------------
+class ExecDeptStat(BaseModel):
+    dept_id: str
+    dept_key: str
+    name_en: str
+    name_mk: str
+    total: int = 0
+    done: int = 0
+    stuck: int = 0
+    completion: int = 0                 # percent
+
+
+class ExecUserStat(BaseModel):
+    user_id: str
+    user_name: str
+    dept_key: str | None = None
+    total: int = 0
+    done: int = 0
+    completion: int = 0
+
+
+class ExecTelemetry(BaseModel):
+    week_start: date
+    total: int = 0
+    completion: int = 0
+    by_status: dict[str, int] = {}
+    busiest_day: str | None = None
+    headcount: int = 0                  # distinct task owners this week
+    reports_submitted: int = 0
+    by_department: list[ExecDeptStat] = []
+    by_user: list[ExecUserStat] = []
+
+
+class ExecInsight(BaseModel):
+    """AI executive analysis over all users' weekly reports + telemetry.
+    available=False ⇒ gateway unconfigured/unreachable (graceful degradation)."""
+    available: bool = True
+    summary: str | None = None
+    highlights: list[str] = []
+    risks: list[str] = []
+    foresight: str | None = None
+    sources: list[str] = []            # report refs the agent drew on
+    note: str | None = None

@@ -21,6 +21,7 @@ PROTECTED = [
     "/planner/tasks/00000000-0000-0000-0000-000000000000",
     "/planner/telemetry?week_start=2026-06-08",
     "/planner/reports?week_start=2026-06-08",
+    "/planner/exec/telemetry?week_start=2026-06-08",
 ]
 
 
@@ -34,6 +35,10 @@ def test_rejects_garbage_token():
     assert r.status_code == 401
 
 
+def test_exec_insights_requires_jwt():
+    assert client.post("/planner/exec/insights?week_start=2026-06-08").status_code == 401
+
+
 def test_openapi_exposes_planner_shapes():
     schemas = app.openapi()["components"]["schemas"]
     for name in [
@@ -42,6 +47,7 @@ def test_openapi_exposes_planner_shapes():
         "PlannerSubtask", "PlannerProgressNote", "PlannerHandoff", "PlannerTelemetry",
         "PlannerWeeklyReport", "PlannerWeeklyReportUpdate",
         "AiDraftResult", "RewriteRequest", "RewriteResult", "RolloverResult",
+        "ExecTelemetry", "ExecInsight", "ExecDeptStat", "ExecUserStat",
     ]:
         assert name in schemas
 

@@ -7,8 +7,8 @@ from fastapi import FastAPI
 from . import __version__
 from .config import get_settings
 from .routers import (
-    auth, batches, catalog, dashboard, generator, health, ingest, planner_reports,
-    planner_tasks, register, specs, templates,
+    auth, batches, catalog, dashboard, generator, health, ingest, planner_exec,
+    planner_reports, planner_tasks, register, specs, templates,
 )
 
 app = FastAPI(
@@ -29,6 +29,7 @@ app.include_router(catalog.router)
 app.include_router(auth.router)
 app.include_router(planner_tasks.router)
 app.include_router(planner_reports.router)
+app.include_router(planner_exec.router)
 
 
 def run() -> None:

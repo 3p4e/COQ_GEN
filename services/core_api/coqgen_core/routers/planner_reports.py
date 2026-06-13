@@ -57,6 +57,26 @@ async def _ai(agent: str, payload: dict) -> dict | None:
         return None
 
 
+async def _store_embedding(session: AsyncSession, report_id: str, chunk: str) -> None:
+    """Best-effort: embed the submitted report for the executive RAG. Never breaks submit."""
+    try:
+        vec = await GatewayClient().embed(chunk)
+        if not vec:
+            return
+        await session.execute(
+            text("DELETE FROM planner_report_embedding WHERE report_id = :r"), {"r": report_id}
+        )
+        await session.execute(
+            text(
+                "INSERT INTO planner_report_embedding (report_id, chunk_text, embedding) "
+                "VALUES (:r, :t, CAST(:e AS vector))"
+            ),
+            {"r": report_id, "t": chunk[:8000], "e": "[" + ",".join(str(x) for x in vec) + "]"},
+        )
+    except Exception:  # embedding is non-critical; submit must still succeed
+        return
+
+
 def _row_to_report(r) -> PlannerWeeklyReport:
     return PlannerWeeklyReport(
         id=str(r["id"]),
@@ -162,6 +182,11 @@ async def submit_report(
         entity_id=str(row["id"]),
         payload={"week_start": str(week_start), "user": user.username, "ai_generated": row["ai_generated"]},
     )
+    chunk = "\n".join(
+        s for s in (row["completed_summary"], row["progress_summary"], row["next_week_plan"]) if s
+    )
+    if chunk.strip():
+        await _store_embedding(session, str(row["id"]), chunk)
     await session.commit()
     return _row_to_report(row)
 

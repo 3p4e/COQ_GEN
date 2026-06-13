@@ -65,3 +65,14 @@ class GatewayClient:
             r = await c.post(f"{self._base}/{path.lstrip('/')}", json=payload, headers=self._headers())
             r.raise_for_status()
             return r.json()
+
+    async def embed(self, content: str) -> list[float] | None:
+        """1536-d embedding for RAG (text-embedding-3-small, interoperable with ecoa_chunk).
+        Returns None when the gateway is unconfigured so callers degrade gracefully."""
+        if not self.configured:
+            return None
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.post(f"{self._base}/embed", json={"input": content}, headers=self._headers())
+            r.raise_for_status()
+            vec = r.json().get("embedding")
+        return vec if isinstance(vec, list) and len(vec) == 1536 else None

@@ -2,6 +2,8 @@
 import { apiDelete, apiGet, apiPatch, apiPost, apiPut, setToken } from "./client";
 import type {
   AiDraftResult,
+  ExecInsight,
+  ExecTelemetry,
   PlannerDepartment,
   PlannerTask,
   PlannerTaskCreate,
@@ -70,3 +72,9 @@ export const rolloverWeek = (weekStart: string): Promise<RolloverResult> =>
   apiPost<RolloverResult>(`/planner/reports/rollover?week_start=${weekStart}`);
 export const aiRewrite = (text: string, tone = "concise"): Promise<RewriteResult> =>
   apiPost<RewriteResult>("/planner/ai/rewrite", { text, tone });
+
+/* ── Executive analytics ──────────────────────────────────────────────────*/
+export const getExecTelemetry = (weekStart: string): Promise<ExecTelemetry> =>
+  apiGet<ExecTelemetry>(`/planner/exec/telemetry?week_start=${weekStart}`);
+export const getExecInsights = (weekStart: string): Promise<ExecInsight> =>
+  apiPost<ExecInsight>(`/planner/exec/insights?week_start=${weekStart}`);

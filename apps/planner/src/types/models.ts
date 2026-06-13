@@ -157,3 +157,45 @@ export interface RolloverResult {
   created: number;
   target_week: string;
 }
+
+export interface ExecDeptStat {
+  dept_id: string;
+  dept_key: string;
+  name_en: string;
+  name_mk: string;
+  total: number;
+  done: number;
+  stuck: number;
+  completion: number;
+}
+
+export interface ExecUserStat {
+  user_id: string;
+  user_name: string;
+  dept_key?: string | null;
+  total: number;
+  done: number;
+  completion: number;
+}
+
+export interface ExecTelemetry {
+  week_start: string;
+  total: number;
+  completion: number;
+  by_status: Record<string, number>;
+  busiest_day?: string | null;
+  headcount: number;
+  reports_submitted: number;
+  by_department: ExecDeptStat[];
+  by_user: ExecUserStat[];
+}
+
+export interface ExecInsight {
+  available: boolean;
+  summary?: string | null;
+  highlights: string[];
+  risks: string[];
+  foresight?: string | null;
+  sources: string[];
+  note?: string | null;
+}

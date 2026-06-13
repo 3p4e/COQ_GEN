@@ -4,6 +4,7 @@ import { Login } from "./views/Login";
 import { MyWeekView } from "./views/MyWeekView";
 import { BoardView } from "./views/BoardView";
 import { ReportsView } from "./views/ReportsView";
+import { ExecutiveDashboard } from "./views/ExecutiveDashboard";
 import { ComingSoon } from "./views/ComingSoon";
 import { getToken } from "./api/client";
 import { listDepartments, listUsers, logout, me } from "./api/planner";
@@ -82,7 +83,7 @@ export function App() {
         <BoardView departments={departments} users={users} weekStart={weekStart} lang={lang} t={t} />
       )}
       {view === "reports" && <ReportsView weekStart={weekStart} t={t} />}
-      {view === "executive" && <ComingSoon title={t("executive")} message={t("exec_soon")} />}
+      {view === "executive" && <ExecutiveDashboard weekStart={weekStart} lang={lang} t={t} />}
       {view === "settings" && <ComingSoon title={t("settings")} message={t("coming_soon")} />}
     </PlannerShell>
   );

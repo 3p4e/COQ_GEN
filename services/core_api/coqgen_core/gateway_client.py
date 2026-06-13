@@ -22,6 +22,12 @@ SUITABLE_AGENTS: set[str] = {
     "ecoa-qc",
     "ocr-escalation",
     "variation-f",
+    # apps/planner agents (PR-B/PR-C): weekly reporting + executive analytics.
+    "planner-orchestrator",
+    "weekly-report",
+    "next-week-plan",
+    "executive-analytics",
+    "task-rewrite",
 }
 
 

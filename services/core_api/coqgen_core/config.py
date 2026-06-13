@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     gateway_url: str = ""
     gateway_token: str = ""
 
+    # Planner (apps/planner) JWT auth. Override jwt_secret in any non-dev environment.
+    jwt_secret: str = "dev-insecure-jwt-secret-change-me"
+    jwt_algorithm: str = "HS256"
+    jwt_ttl_minutes: int = 720  # 12h working day
+
     environment: str = "dev"  # dev | validation | prod
 
 

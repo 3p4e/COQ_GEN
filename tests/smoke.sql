@@ -126,4 +126,35 @@ BEGIN
   RAISE NOTICE 'PASS T6: guard BLOCKS "EU GMP" and PASSES "MK GMP Certified Facility" on flower docs';
 END $$;
 
+-- ---- T7: planner — departments, tasks, defaults, board grouping ------------
+DO $$
+DECLARE dept UUID; usr UUID; tsk UUID; n INT; comp TIMESTAMPTZ; st TEXT;
+BEGIN
+  INSERT INTO planner_department(key,name_en,name_mk,position)
+    VALUES ('smoke_qc','Quality Control','Контрола','1') RETURNING id INTO dept;
+  INSERT INTO app_user(username,full_name,role,email,dept_id,password_hash)
+    VALUES ('smoke_op','Smoke Operator','operator','smoke@op.eu',dept,'x') RETURNING id INTO usr;
+
+  INSERT INTO planner_task(department_id,title,owner_id,week_start,days,tags)
+    VALUES (dept,'Smoke task',usr, date_trunc('week',current_date)::date, ARRAY['Mon','Tue'], ARRAY['EU-GMP'])
+    RETURNING id, status, completed_at INTO tsk, st, comp;
+  IF st <> 'pending' THEN RAISE EXCEPTION 'FAIL T7: default status expected pending, got %', st; END IF;
+  IF comp IS NOT NULL THEN RAISE EXCEPTION 'FAIL T7: completed_at should default NULL'; END IF;
+
+  INSERT INTO planner_subtask(task_id,text,position) VALUES (tsk,'step 1',0),(tsk,'step 2',1);
+  SELECT count(*) INTO n FROM planner_subtask WHERE task_id = tsk;
+  IF n <> 2 THEN RAISE EXCEPTION 'FAIL T7: expected 2 subtasks, got %', n; END IF;
+
+  -- board grouping query (same shape the API uses)
+  SELECT count(*) INTO n FROM planner_task t
+    WHERE t.week_start = date_trunc('week',current_date)::date AND t.status = 'pending';
+  IF n < 1 THEN RAISE EXCEPTION 'FAIL T7: board grouping returned no pending tasks'; END IF;
+
+  -- FK app_user.dept_id -> planner_department resolves
+  SELECT count(*) INTO n FROM app_user u JOIN planner_department d ON d.id = u.dept_id WHERE u.id = usr;
+  IF n <> 1 THEN RAISE EXCEPTION 'FAIL T7: app_user.dept_id FK did not resolve'; END IF;
+
+  RAISE NOTICE 'PASS T7: planner tables, defaults, subtasks, board grouping and dept FK OK';
+END $$;
+
 \echo '---- ALL SMOKE CHECKS PASSED ----'

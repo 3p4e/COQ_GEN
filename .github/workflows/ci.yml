@@ -64,3 +64,15 @@ jobs:
         run: |
           npm install
           npm run build
+
+  planner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Type-check + build planner
+        working-directory: apps/planner
+        run: |
+          npm install
+          npm run build

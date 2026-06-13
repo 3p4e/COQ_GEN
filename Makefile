@@ -1,5 +1,6 @@
 # COQ_GEN developer tasks. Python services run in .venv; desktop in apps/desktop.
-.PHONY: venv install setup db-smoke migrate seed api gateway test test-sql ui-install ui lint
+.PHONY: venv install setup db-smoke migrate seed seed-planner api gateway test test-sql \
+        ui-install ui lint gen-types gen-types-planner planner-install planner
 
 VENV ?= .venv
 PY := $(VENV)/bin/python
@@ -22,6 +23,9 @@ migrate:
 seed:
 	PGPASSWORD=coqgen psql -h 127.0.0.1 -U coqgen -d coqgen_dev -v ON_ERROR_STOP=1 -f tests/fixtures/seed_real_specs.sql
 
+seed-planner: ## load the planner demo (departments, users, a week of tasks)
+	PGPASSWORD=coqgen psql -h 127.0.0.1 -U coqgen -d coqgen_dev -v ON_ERROR_STOP=1 -f tests/fixtures/seed_planner_demo.sql
+
 api: ## run the Core API sidecar (localhost:8765)
 	$(PY) -m coqgen_core.main
 
@@ -40,8 +44,17 @@ lint:
 gen-types: ## regenerate apps/desktop/src/types/api.d.ts from the Core API OpenAPI
 	PY=$(abspath $(PY)) bash scripts/gen_types.sh
 
+gen-types-planner: ## regenerate apps/planner/src/types/api.d.ts from the Core API OpenAPI
+	PY=$(abspath $(PY)) APP_DIR=apps/planner bash scripts/gen_types.sh
+
 ui-install:
 	cd apps/desktop && npm install
 
 ui: ## run the desktop app (Tauri dev)
 	cd apps/desktop && npm run tauri dev
+
+planner-install:
+	cd apps/planner && npm install
+
+planner: ## run the planner app (Vite dev, localhost:5174)
+	cd apps/planner && npm run dev

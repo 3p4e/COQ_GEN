@@ -28,7 +28,13 @@ CREATE TABLE app_user (
     username        TEXT NOT NULL UNIQUE,
     full_name       TEXT NOT NULL,
     role            TEXT NOT NULL,            -- qc_analyst | qc_manager | head_of_qc | admin
+                                              -- planner roles: operator | hod | qa | qp | executive | admin
     is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+    -- Planner authn/identity (added with the apps/planner module; nullable for legacy rows).
+    password_hash   TEXT,                     -- bcrypt ($2*); NULL = cannot log in to the planner
+    email           TEXT UNIQUE,
+    avatar_url      TEXT,
+    dept_id         UUID,                     -- FK added in §7 (planner_department) to avoid forward ref
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -498,3 +504,91 @@ CREATE TABLE audit_event (
 );
 CREATE INDEX idx_audit_entity ON audit_event(entity_type, entity_id);
 CREATE INDEX idx_audit_time   ON audit_event(occurred_at);
+
+-- ---------------------------------------------------------------------------
+-- 7. Team planner (apps/planner) — GrowFlow-style weekly production board.
+--    Independent of the CoQ release workflow; reuses app_user for identity.
+--    Domain-flavored (cultivation / QC / QA), bilingual (EN/MK).
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE planner_department (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    key             TEXT NOT NULL UNIQUE,        -- clone | veg | flower | irr | prod | qc | qa | whin | whout | sec | maint
+    name_en         TEXT NOT NULL,
+    name_mk         TEXT NOT NULL,
+    icon            TEXT,                         -- lucide icon hint
+    color           TEXT,                         -- hex accent for chips
+    handoff_to_id   UUID REFERENCES planner_department(id),  -- next dept in the handoff chain
+    position        INTEGER NOT NULL DEFAULT 0,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- app_user.dept_id -> planner_department (deferred FK; planner_department is defined here)
+ALTER TABLE app_user
+    ADD CONSTRAINT fk_appuser_dept FOREIGN KEY (dept_id) REFERENCES planner_department(id);
+
+CREATE TABLE planner_task (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    department_id   UUID NOT NULL REFERENCES planner_department(id),
+    title           TEXT NOT NULL,
+    owner_id        UUID REFERENCES app_user(id),
+    status          TEXT NOT NULL DEFAULT 'pending',   -- pending|working|review|stuck|postponed|done
+    priority        TEXT NOT NULL DEFAULT 'medium',    -- critical|high|medium|low
+    week_start      DATE NOT NULL,                      -- the Monday of the task's week
+    days            TEXT[] NOT NULL DEFAULT '{}',       -- Mon..Sun
+    room            TEXT,
+    batch           TEXT,
+    tags            TEXT[] NOT NULL DEFAULT '{}',       -- e.g. EU-GMP, MK-GMP, sampling
+    description     TEXT,
+    blocker         TEXT,                               -- set when status='stuck'
+    created_by      UUID REFERENCES app_user(id),
+    position        INTEGER NOT NULL DEFAULT 0,         -- manual ordering within a column
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    completed_at    TIMESTAMPTZ                          -- set when status -> done
+);
+CREATE INDEX idx_planner_task_dept   ON planner_task(department_id);
+CREATE INDEX idx_planner_task_owner  ON planner_task(owner_id);
+CREATE INDEX idx_planner_task_week   ON planner_task(week_start);
+CREATE INDEX idx_planner_task_status ON planner_task(status);
+
+CREATE TABLE planner_task_helper (
+    task_id         UUID NOT NULL REFERENCES planner_task(id) ON DELETE CASCADE,
+    user_id         UUID NOT NULL REFERENCES app_user(id),
+    PRIMARY KEY (task_id, user_id)
+);
+
+CREATE TABLE planner_subtask (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    task_id         UUID NOT NULL REFERENCES planner_task(id) ON DELETE CASCADE,
+    text            TEXT NOT NULL,
+    done            BOOLEAN NOT NULL DEFAULT FALSE,
+    position        INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX idx_planner_subtask_task ON planner_subtask(task_id);
+
+CREATE TABLE planner_progress_note (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    task_id         UUID NOT NULL REFERENCES planner_task(id) ON DELETE CASCADE,
+    day             TEXT,                               -- Mon..Sun (optional)
+    note            TEXT NOT NULL,
+    author_id       UUID REFERENCES app_user(id),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_planner_note_task ON planner_progress_note(task_id);
+
+CREATE TABLE planner_task_dependency (
+    task_id            UUID NOT NULL REFERENCES planner_task(id) ON DELETE CASCADE,
+    depends_on_task_id UUID NOT NULL REFERENCES planner_task(id) ON DELETE CASCADE,
+    PRIMARY KEY (task_id, depends_on_task_id)
+);
+
+CREATE TABLE planner_handoff (
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    task_id            UUID NOT NULL REFERENCES planner_task(id) ON DELETE CASCADE,
+    to_department_id   UUID NOT NULL REFERENCES planner_department(id),
+    status             TEXT NOT NULL DEFAULT 'requested',  -- requested|accepted|done
+    requested_by       UUID REFERENCES app_user(id),
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_planner_handoff_task ON planner_handoff(task_id);

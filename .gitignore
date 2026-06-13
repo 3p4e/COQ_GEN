@@ -12,6 +12,10 @@ node_modules/
 apps/desktop/dist/
 apps/desktop/src-tauri/target/
 
+# Planner app + generated OpenAPI dumps
+apps/planner/dist/
+apps/*/openapi.json
+
 # Local env / secrets
 .env
 .env.*

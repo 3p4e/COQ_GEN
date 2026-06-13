@@ -6,7 +6,7 @@ Keep these the single definition of the cross-boundary shapes. Generate TS types
 """
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from pydantic import BaseModel, Field
 
 
@@ -254,3 +254,147 @@ class IssueResult(BaseModel):
     guard: GuardReport
     register_entry_id: str
     html: str
+
+
+# ---------------------------------------------------------------------------
+# Planner (apps/planner) — GrowFlow-style weekly production board.
+# Auth (JWT) + departments + tasks. Roles: operator|hod|qa|qp|executive|admin.
+# ---------------------------------------------------------------------------
+
+class LoginRequest(BaseModel):
+    username: str                       # username or email
+    password: str
+
+
+class UserOut(BaseModel):
+    id: str
+    username: str
+    full_name: str
+    role: str                           # operator|hod|qa|qp|executive|admin
+    email: str | None = None
+    avatar_url: str | None = None
+    dept_id: str | None = None
+    dept_key: str | None = None
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserOut
+
+
+class PlannerDepartment(BaseModel):
+    id: str
+    key: str
+    name_en: str
+    name_mk: str
+    icon: str | None = None
+    color: str | None = None
+    handoff_to_id: str | None = None
+    position: int = 0
+
+
+class PlannerSubtask(BaseModel):
+    id: str | None = None
+    text: str
+    done: bool = False
+    position: int = 0
+
+
+class PlannerProgressNote(BaseModel):
+    id: str
+    day: str | None = None
+    note: str
+    author_id: str | None = None
+    author_name: str | None = None
+    created_at: datetime | None = None
+
+
+class PlannerHandoff(BaseModel):
+    id: str
+    to_department_id: str
+    to_department_key: str | None = None
+    status: str = "requested"           # requested|accepted|done
+    requested_by: str | None = None
+    created_at: datetime | None = None
+
+
+class PlannerTask(BaseModel):
+    id: str
+    department_id: str
+    department_key: str | None = None
+    title: str
+    owner_id: str | None = None
+    owner_name: str | None = None
+    status: str = "pending"             # pending|working|review|stuck|postponed|done
+    priority: str = "medium"           # critical|high|medium|low
+    week_start: date
+    days: list[str] = []                # Mon..Sun
+    room: str | None = None
+    batch: str | None = None
+    tags: list[str] = []
+    description: str | None = None
+    blocker: str | None = None
+    position: int = 0
+    helper_ids: list[str] = []
+    subtasks: list[PlannerSubtask] = []
+    notes: list[PlannerProgressNote] = []
+    deps: list[str] = []                # task ids this task depends on
+    handoffs: list[PlannerHandoff] = []
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    completed_at: datetime | None = None
+
+
+class PlannerTaskCreate(BaseModel):
+    department_id: str
+    title: str
+    week_start: date
+    owner_id: str | None = None
+    status: str = "pending"
+    priority: str = "medium"
+    days: list[str] = []
+    room: str | None = None
+    batch: str | None = None
+    tags: list[str] = []
+    description: str | None = None
+    blocker: str | None = None
+    helper_ids: list[str] = []
+    subtasks: list[PlannerSubtask] = []
+    deps: list[str] = []
+
+
+class PlannerTaskUpdate(BaseModel):
+    department_id: str | None = None
+    title: str | None = None
+    owner_id: str | None = None
+    status: str | None = None
+    priority: str | None = None
+    week_start: date | None = None
+    days: list[str] | None = None
+    room: str | None = None
+    batch: str | None = None
+    tags: list[str] | None = None
+    description: str | None = None
+    blocker: str | None = None
+    position: int | None = None
+    helper_ids: list[str] | None = None
+    subtasks: list[PlannerSubtask] | None = None
+    deps: list[str] | None = None
+
+
+class PlannerNoteCreate(BaseModel):
+    note: str
+    day: str | None = None
+
+
+class PlannerHandoffCreate(BaseModel):
+    to_department_id: str
+
+
+class PlannerTelemetry(BaseModel):
+    week_start: date
+    total: int = 0
+    completion: int = 0                 # percent done
+    by_status: dict[str, int] = {}      # status -> count
+    busiest_day: str | None = None

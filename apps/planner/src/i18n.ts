@@ -1,0 +1,126 @@
+/* Bilingual EN / Македонски dictionary (pattern adapted from GrowFlow). */
+import type { Lang } from "./types/models";
+
+type Dict = Record<string, string>;
+
+const EN: Dict = {
+  app_name: "Team Planner",
+  my_week: "My Week",
+  board: "Board",
+  reports: "Reports",
+  executive: "Executive",
+  settings: "Settings",
+  this_week: "This Week",
+  next_week: "Next Week",
+  prev_week: "Previous week",
+  today: "Today",
+  total: "Total",
+  completion: "Completion",
+  working: "Working",
+  stuck: "Stuck",
+  postponed: "Postponed",
+  done: "Done",
+  pending: "Not started",
+  review: "In review",
+  busiest: "Busiest day",
+  new_task: "New task",
+  add_task: "Add a task",
+  create_task: "Create task",
+  save: "Save",
+  cancel: "Cancel",
+  delete: "Delete",
+  owner: "Owner",
+  priority: "Priority",
+  department: "Department",
+  status: "Status",
+  title: "Title",
+  description: "Description",
+  days: "Days",
+  room: "Room",
+  batch: "Batch",
+  no_tasks: "No tasks here yet.",
+  blocked: "Blocked",
+  subtasks: "Sub-tasks",
+  progress_notes: "Progress notes",
+  dependencies: "Dependencies",
+  handoff: "Cross-department handoff",
+  logout: "Log out",
+  login: "Log in",
+  username: "Username or email",
+  password: "Password",
+  sign_in: "Sign in",
+  api_down: "Core API unreachable — start it with `make api`.",
+  unassigned: "Unassigned",
+  language: "Language",
+  coming_soon: "Coming soon",
+  reports_soon: "Weekly reports + AI drafting arrive in the next milestone.",
+  exec_soon: "The executive analytics dashboard arrives in a later milestone.",
+};
+
+const MK: Dict = {
+  app_name: "Тимски планер",
+  my_week: "Моја недела",
+  board: "Табла",
+  reports: "Извештаи",
+  executive: "Раководство",
+  settings: "Поставки",
+  this_week: "Оваа недела",
+  next_week: "Следна недела",
+  prev_week: "Претходна недела",
+  today: "Денес",
+  total: "Вкупно",
+  completion: "Завршеност",
+  working: "Во тек",
+  stuck: "Блокирани",
+  postponed: "Одложени",
+  done: "Завршени",
+  pending: "Не започнато",
+  review: "На преглед",
+  busiest: "Најнатоварен ден",
+  new_task: "Нова задача",
+  add_task: "Додај задача",
+  create_task: "Креирај задача",
+  save: "Зачувај",
+  cancel: "Откажи",
+  delete: "Избриши",
+  owner: "Носител",
+  priority: "Приоритет",
+  department: "Оддел",
+  status: "Статус",
+  title: "Наслов",
+  description: "Опис",
+  days: "Денови",
+  room: "Просторија",
+  batch: "Серија",
+  no_tasks: "Сè уште нема задачи.",
+  blocked: "Блокирано",
+  subtasks: "Под-задачи",
+  progress_notes: "Белешки за напредок",
+  dependencies: "Зависности",
+  handoff: "Меѓуоддел. предавање",
+  logout: "Одјави се",
+  login: "Најави се",
+  username: "Корисничко име или е-пошта",
+  password: "Лозинка",
+  sign_in: "Најави се",
+  api_down: "Core API е недостапен — стартувајте го со `make api`.",
+  unassigned: "Недоделено",
+  language: "Јазик",
+  coming_soon: "Наскоро",
+  reports_soon: "Неделните извештаи + АИ нацрт пристигнуваат во следната фаза.",
+  exec_soon: "Аналитичката контролна табла за раководство пристигнува подоцна.",
+};
+
+const DICTS: Record<Lang, Dict> = { en: EN, mk: MK };
+
+export function makeT(lang: Lang) {
+  const d = DICTS[lang];
+  return (key: string): string => d[key] ?? EN[key] ?? key;
+}
+
+export const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAYS_MK = ["Пон", "Вто", "Сре", "Чет", "Пет", "Саб", "Нед"];
+export const dayLabel = (day: string, lang: Lang): string => {
+  const i = DAYS.indexOf(day);
+  return i < 0 ? day : lang === "mk" ? DAYS_MK[i] : DAYS[i];
+};

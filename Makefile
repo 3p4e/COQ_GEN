@@ -1,5 +1,6 @@
 # Planner — standalone developer tasks. Backend in server/ (.venv), frontend in web/.
-.PHONY: venv install migrate seed api test test-sql lint web-install web build
+.PHONY: venv install migrate seed api test test-sql lint web-install web build \
+        gateway-install gateway gateway-test
 
 VENV ?= .venv
 PY := $(VENV)/bin/python
@@ -38,3 +39,12 @@ web: ## run the web app (Vite dev, localhost:5174)
 
 build: ## type-check + build the web app
 	cd web && npm run build
+
+gateway-install: ## install the Letta gateway (editable) + dev tools
+	$(PIP) install -q -e "gateway[dev]"
+
+gateway: ## run the Letta gateway locally (localhost:8800)
+	cd gateway && $(abspath $(PY)) -m planner_gateway.main
+
+gateway-test: ## gateway unit tests
+	cd gateway && $(abspath $(VENV))/bin/pytest -q tests

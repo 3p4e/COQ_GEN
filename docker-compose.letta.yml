@@ -21,6 +21,13 @@ services:
       # GATEWAY_AGENT_NEXT_WEEK_PLAN: "agent-815929b3-8ffb-4671-992b-ee7d55273f24"
       # GATEWAY_AGENT_TASK_REWRITE: "agent-e8518fbc-29a2-4585-8ba8-7cb45a936a18"
       # GATEWAY_AGENT_EXECUTIVE_ANALYTICS: "agent-e72faed9-38f8-4808-9dde-2fac12038f22"
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8800/health').status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     ports:
       - "127.0.0.1:8800:8800"   # planner_api reaches it at http://127.0.0.1:8800
     networks:

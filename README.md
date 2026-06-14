@@ -9,6 +9,8 @@ This repository is **self-contained**: a FastAPI + PostgreSQL(+pgvector) backend
 and a React + Vite frontend (`web/`). No external service is required to run it; the AI
 features activate when a Letta gateway is configured.
 
+Full deployment (DB → API → web → Letta gateway + DeepSeek agents) is in **[DEPLOY.md](DEPLOY.md)**.
+
 ## Layout
 
 ```

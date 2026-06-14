@@ -1,47 +1,50 @@
-# COQ_GEN developer tasks. Python services run in .venv; desktop in apps/desktop.
-.PHONY: venv install setup db-smoke migrate seed api gateway test test-sql ui-install ui lint
+# Planner — standalone developer tasks. Backend in server/ (.venv), frontend in web/.
+.PHONY: venv install migrate seed api test test-sql lint web-install web build \
+        gateway-install gateway gateway-test
 
 VENV ?= .venv
 PY := $(VENV)/bin/python
 PIP := $(VENV)/bin/pip
-export COQGEN_DATABASE_URL ?= postgresql+psycopg://coqgen:coqgen@127.0.0.1:5432/coqgen_dev
+export PLANNER_DATABASE_URL ?= postgresql+psycopg://planner:planner@127.0.0.1:5432/planner_dev
 
 venv:
 	python3 -m venv $(VENV)
 
-install: venv
-	$(PIP) install -q -r requirements-dev.txt
-	$(PIP) install -q -e packages/schemas -e services/core_api -e services/gateway
+install: venv ## install the API (editable) + dev tools
+	$(PIP) install -q -e "server[dev]"
 
-setup: ## bootstrap db + schema + seed (needs local postgres)
-	bash scripts/dev_setup.sh
+migrate: ## apply the schema baseline (alembic upgrade head)
+	cd server/db && $(abspath $(VENV))/bin/alembic upgrade head
 
-migrate:
-	cd db && $(abspath $(VENV))/bin/alembic upgrade head
+seed: ## load the demo data (departments, users, a week of tasks, reports)
+	PGPASSWORD=planner psql -h 127.0.0.1 -U planner -d planner_dev -v ON_ERROR_STOP=1 -f server/fixtures/seed_demo.sql
 
-seed:
-	PGPASSWORD=coqgen psql -h 127.0.0.1 -U coqgen -d coqgen_dev -v ON_ERROR_STOP=1 -f tests/fixtures/seed_real_specs.sql
-
-api: ## run the Core API sidecar (localhost:8765)
-	$(PY) -m coqgen_core.main
-
-gateway: ## run the Letta gateway (0.0.0.0:8800)
-	$(VENV)/bin/uvicorn coqgen_gateway.main:app --host 0.0.0.0 --port 8800
+api: ## run the Planner API (localhost:8765)
+	cd server && $(abspath $(PY)) -m planner_api.main
 
 test: ## python unit tests
-	$(VENV)/bin/pytest -q services/core_api/tests
+	cd server && $(abspath $(VENV))/bin/pytest -q tests
 
-test-sql: ## SQL schema + smoke + OpenAPI checks (needs local postgres)
-	bash tests/run.sh
+test-sql: ## SQL schema + smoke checks (needs local postgres)
+	bash server/tests/run.sh
 
 lint:
-	$(VENV)/bin/ruff check services packages
+	$(VENV)/bin/ruff check server
 
-gen-types: ## regenerate apps/desktop/src/types/api.d.ts from the Core API OpenAPI
-	PY=$(abspath $(PY)) bash scripts/gen_types.sh
+web-install:
+	cd web && npm install
 
-ui-install:
-	cd apps/desktop && npm install
+web: ## run the web app (Vite dev, localhost:5174)
+	cd web && npm run dev
 
-ui: ## run the desktop app (Tauri dev)
-	cd apps/desktop && npm run tauri dev
+build: ## type-check + build the web app
+	cd web && npm run build
+
+gateway-install: ## install the Letta gateway (editable) + dev tools
+	$(PIP) install -q -e "gateway[dev]"
+
+gateway: ## run the Letta gateway locally (localhost:8800)
+	cd gateway && $(abspath $(PY)) -m planner_gateway.main
+
+gateway-test: ## gateway unit tests
+	cd gateway && $(abspath $(VENV))/bin/pytest -q tests

@@ -1,4 +1,4 @@
-# Python (services + tooling)
+# Python
 .venv/
 __pycache__/
 *.pyc
@@ -7,10 +7,9 @@ __pycache__/
 *.egg-info/
 .coverage
 
-# Node / Tauri (desktop)
+# Node / Vite
 node_modules/
-apps/desktop/dist/
-apps/desktop/src-tauri/target/
+web/dist/
 
 # Local env / secrets
 .env

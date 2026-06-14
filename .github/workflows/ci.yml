@@ -6,61 +6,68 @@ on:
   pull_request:
 
 jobs:
-  python:
+  server:
     runs-on: ubuntu-latest
     services:
       postgres:
         image: pgvector/pgvector:pg16
         env:
-          POSTGRES_USER: coqgen
-          POSTGRES_PASSWORD: coqgen
-          POSTGRES_DB: coqgen_dev
+          POSTGRES_USER: planner
+          POSTGRES_PASSWORD: planner
+          POSTGRES_DB: planner_dev
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U coqgen" --health-interval 5s
+          --health-cmd "pg_isready -U planner" --health-interval 5s
           --health-timeout 5s --health-retries 10
     env:
-      COQGEN_DATABASE_URL: postgresql+psycopg://coqgen:coqgen@127.0.0.1:5432/coqgen_dev
-      PGPASSWORD: coqgen
+      PLANNER_DATABASE_URL: postgresql+psycopg://planner:planner@127.0.0.1:5432/planner_dev
+      PGHOST: 127.0.0.1
+      PGUSER: planner
+      PGPASSWORD: planner
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
 
-      - name: Install deps
-        run: |
-          python -m pip install -U pip
-          pip install -r requirements-dev.txt openapi-spec-validator
-          pip install -e packages/schemas -e services/core_api -e services/gateway
+      - name: Install API
+        run: pip install -e "server[dev]"
 
       - name: SQL schema + smoke checks
-        run: |
-          psql -h 127.0.0.1 -U coqgen -d coqgen_dev -v ON_ERROR_STOP=1 -f db/schema.sql
-          psql -h 127.0.0.1 -U coqgen -d coqgen_dev -v ON_ERROR_STOP=1 -f tests/smoke.sql
+        run: PGUSER=planner bash server/tests/run.sh
 
       - name: Alembic baseline on a fresh DB
         run: |
-          createdb -h 127.0.0.1 -U coqgen coqgen_mig
-          COQGEN_DATABASE_URL=postgresql+psycopg://coqgen:coqgen@127.0.0.1:5432/coqgen_mig \
-            bash -c 'cd db && alembic upgrade head'
-
-      - name: OpenAPI contract validation
-        run: python tests/validate_openapi.py
+          createdb -h 127.0.0.1 -U planner planner_mig
+          PLANNER_DATABASE_URL=postgresql+psycopg://planner:planner@127.0.0.1:5432/planner_mig \
+            bash -c 'cd server/db && alembic upgrade head'
 
       - name: Python unit tests
-        run: pytest -q services/core_api/tests
+        run: cd server && pytest -q tests
 
       - name: Lint
-        run: ruff check services packages
+        run: ruff check server gateway
 
-  desktop:
+  web:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: "22" }
-      - name: Type-check + build UI
-        working-directory: apps/desktop
+      - name: Type-check + build web
+        working-directory: web
         run: |
           npm install
           npm run build
+
+  gateway:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Install gateway
+        run: pip install -e "gateway[dev]"
+      - name: Unit tests
+        run: cd gateway && python -m pytest -q tests
+      - name: Build gateway image
+        run: docker build -t planner-gateway ./gateway

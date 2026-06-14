@@ -1,0 +1,23 @@
+# Production override: expose `web` via a host Traefik (HTTPS + Let's Encrypt).
+#
+# Usage on the host (Traefik already running, docker provider, websecure:443,
+# certresolver "letsencrypt"):
+#   cp docker-compose.prod.yml docker-compose.override.yml   # auto-merged by compose
+#   docker compose up -d web
+#
+# Adjust to your environment:
+#   - traefik.docker.network  -> the web container's docker network (`<project>_default`)
+#   - the Host(...) rule       -> your domain / subdomain (wildcard DNS -> host IP)
+#   - certresolver / entrypoint names must match your Traefik config
+#
+# Traefik may run in host-network mode; it then reaches the container by its bridge IP,
+# so no shared network is required — just the labels below.
+services:
+  web:
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "planner-src_default"
+      traefik.http.routers.planner.entrypoints: "websecure"
+      traefik.http.routers.planner.rule: "Host(`planner.srv1231216.hstgr.cloud`)"
+      traefik.http.routers.planner.tls.certresolver: "letsencrypt"
+      traefik.http.services.planner.loadbalancer.server.port: "80"

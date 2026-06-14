@@ -24,6 +24,24 @@ demo data (set `PLANNER_SEED=0` to skip).
 - This compose **includes** the gateway. If you already ran `docker-compose.letta.yml`, remove that
   container first: `docker rm -f planner-gateway`.
 
+### Public HTTPS via Traefik (production)
+
+If the host already runs a Traefik reverse proxy (docker provider, `websecure:443`,
+a Let's Encrypt `certresolver`), expose the app with the labels in
+`docker-compose.prod.yml` — no extra ports, automatic cert:
+
+```bash
+cp docker-compose.prod.yml docker-compose.override.yml   # auto-merged by compose
+docker compose up -d web
+curl -s https://planner.<your-domain>/health ; echo       # -> {"status":"ok",...}
+```
+Edit `docker-compose.prod.yml` first: the `Host(...)` rule (your domain — wildcard DNS
+→ host IP works), `traefik.docker.network` (the web container's network, `<project>_default`),
+and the entrypoint/certresolver names to match your Traefik. Traefik in host-network mode
+reaches the container by its bridge IP, so no shared network is needed. HTTP→HTTPS redirect,
+SPA, login and the AI chain were verified end-to-end at
+`https://planner.srv1231216.hstgr.cloud`.
+
 The sections below are the equivalent **manual / piecemeal** steps (useful for local dev or debugging).
 
 ## 0. Prerequisites

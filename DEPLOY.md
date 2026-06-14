@@ -125,6 +125,59 @@ export PLANNER_GATEWAY_URL=http://127.0.0.1:8800
     "http://127.0.0.1:8765/planner/reports/ai-draft?week_start=$(date -d 'monday' +%F)"
   ```
 
+## 7. Production hardening — rotate the JWT secret + clean admin reseed
+
+Replaces the demo seed (`elena` / `Password123!`, a week of fake tasks) with a single real
+admin, and rotates `PLANNER_JWT_SECRET` (which invalidates every existing session). Run it
+**on the KVM4 host** (the cloud CI sandbox only has :443 egress, so SSH ops go through the
+host shell / the `kvm4` alias). The new secret and the admin password are generated/entered
+**on the host** — they never transit a chat or git.
+
+> Scope: this does **not** rotate `LETTA_SERVER_PASSWORD` (a secret shared by Agent Zero,
+> letta-daemon/-ui, QMS, SUMA, CoA Tracker and letta-mcp — rotate it via its own coordinated
+> runbook, in lockstep with those consumers) and does **not** touch the Hostinger API key
+> (rotate that in hPanel).
+
+```bash
+cd /opt/planner-src
+git fetch origin && git checkout claude/planner-standalone && git pull
+
+# 1) Rotate the JWT secret, disable the demo seed, mark the env prod — into a root-only .env
+#    (docker compose auto-reads ./.env). PLANNER_ENVIRONMENT=prod makes the API refuse to
+#    boot on a placeholder secret.
+{ grep -vE '^(PLANNER_JWT_SECRET|PLANNER_SEED|PLANNER_ENVIRONMENT)=' .env 2>/dev/null
+  echo "PLANNER_JWT_SECRET=$(openssl rand -hex 32)"
+  echo "PLANNER_SEED=0"
+  echo "PLANNER_ENVIRONMENT=prod"; } > .env.new && mv .env.new .env && chmod 600 .env
+
+# 2) Stop the API, then wipe + recreate the planner database (drops ALL demo data)
+docker compose stop planner-api
+docker compose exec -T db psql -U planner -d postgres -v ON_ERROR_STOP=1 \
+  -c "DROP DATABASE IF EXISTS planner_dev WITH (FORCE);" \
+  -c "CREATE DATABASE planner_dev OWNER planner;"
+
+# 3) Rebuild the API — it re-applies the schema (alembic) on boot; PLANNER_SEED=0 -> no demo
+docker compose up -d --build planner-api
+until docker compose exec -T db pg_isready -U planner -d planner_dev >/dev/null 2>&1; do sleep 2; done
+sleep 5   # let the entrypoint finish `alembic upgrade head`
+
+# 4) Seed the single real admin. Password is read from a prompt -> never in shell history/git.
+read -rsp "Admin password: " ADMIN_PW; echo
+docker compose exec -T \
+  -e ADMIN_PW="$ADMIN_PW" \
+  db psql -U planner -d planner_dev -v ON_ERROR_STOP=1 \
+    -v admin_username=azu -v admin_email=azu.sozon@gmail.com \
+    -v admin_password="$ADMIN_PW" < server/fixtures/seed_admin.sql
+unset ADMIN_PW
+
+# 5) Bring the stack back up and verify (old tokens are now rejected; log in fresh)
+docker compose up -d
+curl -s http://127.0.0.1:8080/health; echo
+```
+
+Then log in at `https://planner.srv1231216.hstgr.cloud` as `azu` with the password you entered.
+Re-running step 4 (same username) just resets the admin's password — it's an idempotent upsert.
+
 ## Notes
 - Without `PLANNER_GATEWAY_URL`, every AI endpoint returns `available: false` + a note (HTTP 200);
   the planner is fully usable.

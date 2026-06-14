@@ -51,3 +51,20 @@ def test_assistant_json_takes_last_assistant_ignoring_reasoning_and_tools():
 
 def test_assistant_json_empty_when_no_assistant_message():
     assert _assistant_json({"messages": [{"message_type": "reasoning_message", "reasoning": "x"}]}) == {}
+
+
+def test_assistant_json_strips_markdown_fences():
+    fenced = '```json\n{"summary": "all good", "risks": []}\n```'
+    resp = {"messages": [{"message_type": "assistant_message", "content": fenced}]}
+    assert _assistant_json(resp) == {"summary": "all good", "risks": []}
+
+
+def test_assistant_json_extracts_object_from_surrounding_prose():
+    prose = 'Here is the report:\n{"completed_summary": "done"}\nLet me know if you need more.'
+    resp = {"messages": [{"message_type": "assistant_message", "content": prose}]}
+    assert _assistant_json(resp) == {"completed_summary": "done"}
+
+
+def test_assistant_json_text_fallback_when_not_json():
+    resp = {"messages": [{"message_type": "assistant_message", "content": "no json here"}]}
+    assert _assistant_json(resp) == {"text": "no json here"}

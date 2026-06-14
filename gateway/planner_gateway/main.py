@@ -8,6 +8,7 @@ into the executive agent's memory so its analysis is cross-week stateful.
 from __future__ import annotations
 
 import json
+import re
 
 import httpx
 from fastapi import FastAPI, HTTPException
@@ -18,19 +19,37 @@ from .config import agent_map, get_settings
 
 app = FastAPI(title="Planner Letta Gateway", version=__version__)
 
+_FENCE = re.compile(r"^```[a-zA-Z0-9]*\s*|\s*```$")
+
+
+def _parse_json(content: str) -> dict | None:
+    """Parse model output as a JSON object, tolerating ```json fences and surrounding prose
+    (LLMs like DeepSeek often wrap JSON despite instructions). Returns None if no object found."""
+    t = _FENCE.sub("", content.strip()).strip()
+    try:
+        v = json.loads(t)
+        return v if isinstance(v, dict) else None
+    except (json.JSONDecodeError, TypeError):
+        pass
+    m = re.search(r"\{.*\}", t, re.DOTALL)  # last resort: first {...} block
+    if m:
+        try:
+            v = json.loads(m.group(0))
+            return v if isinstance(v, dict) else None
+        except (json.JSONDecodeError, TypeError):
+            pass
+    return None
+
 
 def _assistant_json(letta_response: dict) -> dict:
-    """Return the agent's last assistant message parsed as JSON ({"text": raw} on miss)."""
+    """Return the agent's last assistant message parsed as a JSON object ({"text": raw} on miss)."""
     content = None
     for m in letta_response.get("messages", []):
         if m.get("message_type") == "assistant_message" and m.get("content"):
             content = m["content"]
     if not content:
         return {}
-    try:
-        return json.loads(content)
-    except (json.JSONDecodeError, TypeError):
-        return {"text": content}
+    return _parse_json(content) or {"text": content}
 
 
 async def _letta_message(agent_id: str, content: str) -> dict:

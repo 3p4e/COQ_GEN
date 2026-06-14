@@ -1,0 +1,76 @@
+# Full-stack planner on KVM4: Postgres + planner_api + web (nginx) + Letta gateway.
+#
+# Deploy (on the Letta host):
+#   PLANNER_JWT_SECRET=$(openssl rand -hex 32) LETTA_SERVER_PASSWORD=letta-master-key \
+#     docker compose up -d --build
+#
+# - web is published on :8080 and reverse-proxies the API (same origin -> no browser CORS).
+# - gateway joins the external Letta network to reach the `letta` container at :8283.
+#   Set the correct network name below (docker network ls); it was agent-zero-t4sx_default.
+# - This compose includes the gateway; if you ran docker-compose.letta.yml separately,
+#   remove that one first:  docker rm -f planner-gateway
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: planner
+      POSTGRES_PASSWORD: planner
+      POSTGRES_DB: planner_dev
+    volumes:
+      - planner_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U planner -d planner_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  planner-api:
+    build: ./server
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PLANNER_DATABASE_URL: postgresql+psycopg://planner:planner@db:5432/planner_dev
+      PLANNER_BIND_HOST: 0.0.0.0
+      PLANNER_BIND_PORT: "8765"
+      PLANNER_JWT_SECRET: ${PLANNER_JWT_SECRET:-dev-insecure-change-me}
+      PLANNER_GATEWAY_URL: http://gateway:8800
+      PLANNER_SEED: ${PLANNER_SEED:-1}
+      PGHOST: db
+      PGUSER: planner
+      PGPASSWORD: planner
+      PGDATABASE: planner_dev
+
+  gateway:
+    build: ./gateway
+    restart: unless-stopped
+    environment:
+      GATEWAY_BIND_HOST: 0.0.0.0
+      GATEWAY_BIND_PORT: "8800"
+      GATEWAY_LETTA_BASE_URL: http://letta:8283
+      GATEWAY_LETTA_TOKEN: ${LETTA_SERVER_PASSWORD:-letta-master-key}
+    networks:
+      - default
+      - letta
+
+  web:
+    build:
+      context: ./web
+      args:
+        VITE_PLANNER_API: ""
+    restart: unless-stopped
+    depends_on:
+      - planner-api
+    ports:
+      - "8080:80"
+
+volumes:
+  planner_pgdata:
+
+networks:
+  default:
+  letta:
+    external: true
+    name: agent-zero-t4sx_default   # <- your Letta container's docker network

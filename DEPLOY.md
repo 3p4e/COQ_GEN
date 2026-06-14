@@ -4,6 +4,28 @@ End-to-end deployment: PostgreSQL, the planner API, the React app, and the Letta
 connects the planner to the DeepSeek agents on the Letta server. AI degrades gracefully, so steps
 1–3 give a fully working planner; steps 4–5 turn the AI on.
 
+## Full-stack (one command, recommended for KVM4)
+
+Brings up **Postgres + planner_api + web + gateway** together. `web` is published on `:8080` and
+reverse-proxies the API (same origin, no browser CORS); the gateway joins the Letta network.
+
+```bash
+# on the Letta host, from the repo:
+PLANNER_JWT_SECRET=$(openssl rand -hex 32) LETTA_SERVER_PASSWORD=letta-master-key \
+  docker compose up -d --build
+docker compose ps
+curl -s http://127.0.0.1:8080/health ; echo      # proxied to planner_api
+```
+Open `http://<host>:8080` and log in (`elena` / `Password123!`, etc.). First boot migrates + seeds
+demo data (set `PLANNER_SEED=0` to skip).
+
+- Set the external Letta network name in `docker-compose.yml` (`networks.letta.name`) to match
+  `docker network ls` — it was `agent-zero-t4sx_default`.
+- This compose **includes** the gateway. If you already ran `docker-compose.letta.yml`, remove that
+  container first: `docker rm -f planner-gateway`.
+
+The sections below are the equivalent **manual / piecemeal** steps (useful for local dev or debugging).
+
 ## 0. Prerequisites
 - PostgreSQL 16 + pgvector.
 - Python 3.11+ and Node 22 (for local runs) — or just Docker for the gateway.

@@ -14,6 +14,14 @@ class Settings(BaseSettings):
     bind_host: str = "127.0.0.1"
     bind_port: int = 8765
 
+    # CORS origins for the web app (comma-separated or JSON list via PLANNER_CORS_ORIGINS).
+    cors_origins: list[str] = [
+        "http://127.0.0.1:5174",
+        "http://localhost:5174",
+        "http://127.0.0.1:4173",
+        "http://localhost:4173",
+    ]
+
     # JWT auth. Override jwt_secret in any non-dev environment.
     jwt_secret: str = "dev-insecure-jwt-secret-change-me"
     jwt_algorithm: str = "HS256"

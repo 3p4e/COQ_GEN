@@ -58,3 +58,16 @@ jobs:
         run: |
           npm install
           npm run build
+
+  gateway:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Install gateway
+        run: pip install -e "gateway[dev]"
+      - name: Unit tests
+        run: cd gateway && python -m pytest -q tests
+      - name: Build gateway image
+        run: docker build -t planner-gateway ./gateway

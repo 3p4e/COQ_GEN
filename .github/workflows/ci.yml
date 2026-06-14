@@ -21,6 +21,8 @@ jobs:
           --health-timeout 5s --health-retries 10
     env:
       PLANNER_DATABASE_URL: postgresql+psycopg://planner:planner@127.0.0.1:5432/planner_dev
+      PGHOST: 127.0.0.1
+      PGUSER: planner
       PGPASSWORD: planner
     steps:
       - uses: actions/checkout@v4

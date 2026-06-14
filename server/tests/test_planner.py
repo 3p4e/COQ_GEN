@@ -58,4 +58,4 @@ def test_openapi_exposes_planner_shapes():
 def test_ai_degrades_gracefully_when_gateway_unconfigured():
     from planner_api.routers.reports import _ai
 
-    assert asyncio.run(_ai("weekly-report", {"week_start": "2026-06-08"})) is None
+    assert asyncio.run(_ai("weekly-report", "ping", {"week_start": "2026-06-08"})) is None

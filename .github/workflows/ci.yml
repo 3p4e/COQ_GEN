@@ -45,7 +45,7 @@ jobs:
         run: cd server && pytest -q tests
 
       - name: Lint
-        run: ruff check server
+        run: ruff check server gateway
 
   web:
     runs-on: ubuntu-latest

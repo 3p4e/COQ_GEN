@@ -18,6 +18,8 @@ server/                 FastAPI API + PostgreSQL schema/migrations
   fixtures/             seed_demo.sql
   tests/                pytest + SQL smoke harness
 web/                    React + Vite app (port 5174), bilingual EN/MK
+gateway/                Letta gateway service (FastAPI container; planner_api -> gateway -> Letta)
+docker-compose.letta.yml  drop-in to run the gateway inside the Letta stack on KVM4
 ```
 
 ## Quick start
@@ -58,11 +60,21 @@ Demo login (any user, password `Password123!`): `elena` (HOD · QC), `marko`, `d
 - **Weekly reports** — AI-draft → human edit → submit (read-only after); roll-over of unfinished
   tasks; AI rewrite. Submissions + AI runs recorded in a hash-chained audit trail.
 - **Executive dashboard** (executive/admin) — org-wide rollups + an AI analytics agent
-  (summary / highlights / risks / foresight) over all submitted reports, with pgvector embeddings.
+  (summary / highlights / risks / foresight) over all submitted reports; submitted reports are
+  persisted into the executive agent's **durable Letta memory**, so its analysis is stateful across weeks.
 
-Every AI surface returns `available: false` + a note (HTTP 200) when the gateway is unset, so the
-planner is fully usable offline. AI activates with the Letta agents `weekly-report`, `task-rewrite`,
-`executive-analytics`, and an `/embed` endpoint.
+### AI / Letta
+
+`planner_api` never talks to Letta directly: it calls the dedicated **gateway** container
+(`gateway/`, `POST /agents/{name}/invoke`), which maps logical names to real Letta agents and is
+the only allow-listed path to the fleet. Deploy it into the Letta stack with
+`docker compose -f docker-compose.letta.yml up -d --build` (set `LETTA_SERVER_PASSWORD`).
+
+Four stateful Letta agents back the planner (DeepSeek: `deepseek-v4-pro` for analytics/planning,
+`deepseek-v4-flash` for drafting/rewrite): `weekly-report`, `next-week-plan`, `task-rewrite`,
+`executive-analytics` (with a persistent `organization` memory block). Every AI surface returns
+`available: false` + a note (HTTP 200) when `PLANNER_GATEWAY_URL` is unset, so the planner is fully
+usable offline.
 
 ## Tests
 

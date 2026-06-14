@@ -45,36 +45,10 @@ _REPORT_SELECT = (
 
 
 # --------------------------------------------------------------------------- #
-# AI helper — single choke point for graceful degradation
+# AI helper — single choke point for graceful degradation (planner -> gateway -> Letta)
 # --------------------------------------------------------------------------- #
-async def _ai(agent: str, payload: dict) -> dict | None:
-    gw = GatewayClient()
-    if not gw.configured:
-        return None
-    try:
-        return await gw.invoke(agent, "invoke", payload)
-    except Exception:  # any gateway failure (network, auth, allow-list) ⇒ graceful fallback
-        return None
-
-
-async def _store_embedding(session: AsyncSession, report_id: str, chunk: str) -> None:
-    """Best-effort: embed the submitted report for the executive RAG. Never breaks submit."""
-    try:
-        vec = await GatewayClient().embed(chunk)
-        if not vec:
-            return
-        await session.execute(
-            text("DELETE FROM planner_report_embedding WHERE report_id = :r"), {"r": report_id}
-        )
-        await session.execute(
-            text(
-                "INSERT INTO planner_report_embedding (report_id, chunk_text, embedding) "
-                "VALUES (:r, :t, CAST(:e AS vector))"
-            ),
-            {"r": report_id, "t": chunk[:8000], "e": "[" + ",".join(str(x) for x in vec) + "]"},
-        )
-    except Exception:  # embedding is non-critical; submit must still succeed
-        return
+async def _ai(agent: str, message: str, context: dict | None = None) -> dict | None:
+    return await GatewayClient().invoke(agent, message, context)
 
 
 def _row_to_report(r) -> PlannerWeeklyReport:
@@ -182,12 +156,15 @@ async def submit_report(
         entity_id=str(row["id"]),
         payload={"week_start": str(week_start), "user": user.username, "ai_generated": row["ai_generated"]},
     )
-    chunk = "\n".join(
-        s for s in (row["completed_summary"], row["progress_summary"], row["next_week_plan"]) if s
-    )
-    if chunk.strip():
-        await _store_embedding(session, str(row["id"]), chunk)
     await session.commit()
+    # Persist the report into the executive agent's durable Letta memory (best-effort, post-commit).
+    await GatewayClient().record_exec_report({
+        "week_start": str(week_start),
+        "user": user.full_name,
+        "completed": row["completed_summary"],
+        "progress": row["progress_summary"],
+        "next_plan": row["next_week_plan"],
+    })
     return _row_to_report(row)
 
 
@@ -209,12 +186,12 @@ async def ai_draft(
             {"u": user.id, "w": week_start},
         )
     ).mappings().all()
-    payload = {
+    context = {
         "week_start": str(week_start),
         "user": user.full_name,
         "tasks": [dict(t) for t in tasks],
     }
-    result = await _ai("weekly-report", payload)
+    result = await _ai("weekly-report", "Draft my weekly report from these tasks.", context)
     if result is None:
         return AiDraftResult(available=False, note=_GATEWAY_OFF)
 
@@ -244,7 +221,7 @@ async def ai_rewrite(
 ) -> RewriteResult:
     if not body.text.strip():
         raise HTTPException(status_code=422, detail="text is required")
-    result = await _ai("task-rewrite", {"text": body.text, "tone": body.tone})
+    result = await _ai("task-rewrite", f"Rewrite in a {body.tone} tone:\n{body.text}", {"tone": body.tone})
     if result is None or not result.get("text"):
         return RewriteResult(available=False, text=body.text, note=_GATEWAY_OFF)
     await record_event(

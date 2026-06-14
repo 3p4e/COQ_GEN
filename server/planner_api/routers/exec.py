@@ -39,14 +39,8 @@ _STATUSES = ("pending", "working", "review", "stuck", "postponed", "done")
 _DAYS = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
 
-async def _ai(agent: str, payload: dict) -> dict | None:
-    gw = GatewayClient()
-    if not gw.configured:
-        return None
-    try:
-        return await gw.invoke(agent, "invoke", payload)
-    except Exception:  # any gateway failure ⇒ graceful fallback
-        return None
+async def _ai(agent: str, message: str, context: dict | None = None) -> dict | None:
+    return await GatewayClient().invoke(agent, message, context)
 
 
 @router.get("/telemetry", response_model=ExecTelemetry)
@@ -177,7 +171,11 @@ async def exec_insights(
             for r in reports
         ],
     }
-    result = await _ai("executive-analytics", payload)
+    result = await _ai(
+        "executive-analytics",
+        "Produce the executive analysis JSON for this week using these reports and your memory.",
+        payload,
+    )
     if result is None:
         return ExecInsight(available=False, sources=sources, note=_GATEWAY_OFF)
 
